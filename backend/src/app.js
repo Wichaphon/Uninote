@@ -2,7 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
-dotenv.config({ path: "./.env" });
+import authRoutes from './routes/auth.route.js';
+
+dotenv.config({ path: "../.env" });
 
 const PORT = process.env.PORT;
 
@@ -17,10 +19,11 @@ app.use(
   })
 );
 
+app.use("/api/auth", authRoutes);
+
 app.listen(PORT, () => {
     console.log(`Server run on PORT : ${PORT}`)
     console.log(`Protected cors use only : ${process.env.DEV}`)
-    
 });
 
 
