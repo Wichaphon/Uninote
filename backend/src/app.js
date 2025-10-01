@@ -19,6 +19,7 @@ app.use(
   })
 );
 
+// Routes
 app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
