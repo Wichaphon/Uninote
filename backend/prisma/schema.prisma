@@ -63,23 +63,34 @@ model SellerProfile {
 }
 
 model Sheet {
-  id          String     @id @default(uuid())
-  title       String
-  description String
-  subject     String
-  price       Decimal    @db.Decimal(10, 2)
-  fileUrl     String
+  id           String     @id @default(uuid())
+  title        String
+  description  String
+  subject      String
+  year         String?     //ชั้นปี เช่น "1", "2", "3", "4"
+  faculty      String?     //คณะ
+  department   String?     //สาขา
+  university   String?     //มหาวิทยาลัย
+  price        Decimal    @db.Decimal(10, 2)
+  fileUrl      String
   thumbnailUrl String?
   
-  sellerId    String
-  seller      User       @relation("SellerSheets", fields: [sellerId], references: [id])
+  sellerId     String
+  seller       User       @relation("SellerSheets", fields: [sellerId], references: [id])
   
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  isActive     Boolean    @default(true)
+  viewCount    Int        @default(0)
+  purchaseCount Int       @default(0)
   
-  purchases   Purchase[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   
+  purchases    Purchase[]
+  
+  @@index([subject])
+  @@index([university])
+  @@index([faculty])
+  @@index([sellerId])
   @@map("sheets")
 }
 
@@ -96,5 +107,7 @@ model Purchase {
   purchasedAt DateTime @default(now())
   
   @@unique([userId, sheetId])
+  @@index([userId])
+  @@index([sheetId])
   @@map("purchases")
 }
