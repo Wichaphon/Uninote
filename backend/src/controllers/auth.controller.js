@@ -53,7 +53,57 @@ export const register = async (req, res) => {
             user,
         });
     } catch (error) {
-        console.error('Register error:', error);
-        res.status(500).json({ error: 'Registration failed from authController.' });
+        console.error(`Register error: ${error} | from authController`);
+        res.status(500).json({ error: 'Registration failed.' });
     }
 };
+
+export const login = async (req, res) => {
+    try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {  
+      return res.status(400).json({ error: 'Email and password are required.' });  
+    }   
+
+    // email = email.trim().toLowerCase();
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ error: 'Your account has been suspended.' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const token = generateToken(user);
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    res.json({
+      message: 'Login successful.',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      token,
+    });
+  } 
+  
+  catch (error) {
+    console.error(`Login error: ${ error } | from authController`);
+    res.status(500).json({ error: 'Login failed.' });
+  }
+}
