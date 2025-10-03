@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
 import prisma from "../lib/prisma.js";
 import jwt from 'jsonwebtoken';
+import ms from 'ms';
 import { generateAccessToken, generateRefreshToken, saveRefreshToken, } from "../lib/jwt.js";
-import { SALT_ROUNDS,  } from "../config/env.js";
+import { SALT_ROUNDS, JWT_REFRESH_SECRET, JWT_ACCESS_EXPIRES_IN } from "../config/env.js";
 import { validateEmail } from "../utils/validators.js";
 
 export const register = async (req, res) => {
@@ -123,3 +124,63 @@ export const login = async (req, res) => {
     res.status(500).json({ error: "Login failed." });
   }
 };
+
+export const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token is required.' });
+    }
+
+    //เช็ค refresh token signature
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid or expired refresh token.' });
+    }
+
+    //เช็คว่าเป็น refresh token จริง
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({ error: 'Invalid token type.' });
+    }
+
+    //เช็คว่า refresh token อยู่ใน db ไหม
+    const tokenRecord = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    if (!tokenRecord) {
+      return res.status(401).json({ error: 'Refresh token is invalid' });
+    }
+
+    if (!tokenRecord.user.isActive) {
+      return res.status(403).json({ error: 'Your account has been suspended.' });
+    }
+
+    //สร้างaccess token ใหม่
+    const newAccessToken = generateAccessToken(tokenRecord.user);
+
+    res.json({
+      accessToken: newAccessToken,
+      tokenType: 'Bearer',
+      expiresIn: ms(JWT_ACCESS_EXPIRES_IN) / 1000, //แปลงเป็น ms
+    });
+  } catch (error) {
+    console.error(`Refresh token error: ${error} | from authController`);
+    res.status(500).json({ error: 'Failed to refresh token.' });
+  }
+}
