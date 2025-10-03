@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -12,7 +8,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 
 enum Role {
   USER
@@ -40,6 +35,7 @@ model User {
   sellerProfile SellerProfile?
   sheets        Sheet[]        @relation("SellerSheets")
   purchases     Purchase[]
+  refreshTokens RefreshToken[]
   
   @@map("users")
 }
@@ -67,7 +63,7 @@ model Sheet {
   title        String
   description  String
   subject      String
-  year         String?     //ชั้นปี เช่น "1", "2", "3", "4"
+  year         String?     //ชั้นปี 
   faculty      String?     //คณะ
   department   String?     //สาขา
   university   String?     //มหาวิทยาลัย
@@ -110,4 +106,18 @@ model Purchase {
   @@index([userId])
   @@index([sheetId])
   @@map("purchases")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
