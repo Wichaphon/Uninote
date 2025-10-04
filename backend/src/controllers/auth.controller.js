@@ -184,3 +184,30 @@ export const refreshToken = async (req, res) => {
     res.status(500).json({ error: 'Failed to refresh token.' });
   }
 }
+
+export const logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (refreshToken) {
+      await prisma.refreshToken.delete({
+        where: { token: refreshToken },
+      }).catch(() => {
+    
+      });
+    }
+
+    //ลบ cookie
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/api/auth',
+    });
+
+    res.json({ message: 'Logout successful.' });
+  } catch (error) {
+    console.error(`Logout error: ${error} | from authController`);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการ logout' });
+  }
+}
