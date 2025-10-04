@@ -3,7 +3,7 @@ import prisma from "../lib/prisma.js";
 import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import { generateAccessToken, generateRefreshToken, saveRefreshToken, } from "../lib/jwt.js";
-import { SALT_ROUNDS, JWT_REFRESH_SECRET, JWT_ACCESS_EXPIRES_IN } from "../config/env.js";
+import { SALT_ROUNDS, JWT_REFRESH_SECRET, JWT_ACCESS_EXPIRES_IN, NODE_ENV } from "../config/env.js";
 import { validateEmail } from "../utils/validators.js";
 
 export const register = async (req, res) => {
@@ -183,7 +183,7 @@ export const refreshToken = async (req, res) => {
     console.error(`Refresh token error: ${error} | from authController`);
     res.status(500).json({ error: 'Failed to refresh token.' });
   }
-}
+};
 
 export const logout = async (req, res) => {
   try {
@@ -208,6 +208,31 @@ export const logout = async (req, res) => {
     res.json({ message: 'Logout successful.' });
   } catch (error) {
     console.error(`Logout error: ${error} | from authController`);
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการ logout' });
+    res.status(500).json({ error: 'Logout failed' });
   }
-}
+};
+
+export const logoutAll = async (req, res) => {
+  try {
+    const deleted = await prisma.refreshToken.deleteMany({
+      where: { userId: req.user.id },
+    });
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: NODE_ENV === 'production',
+      sameSite: NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/api/auth',
+    });
+
+    res.json({
+      message: 'Logged out from all devices successfully.',
+      devicesLoggedOut: deleted.count,
+    });
+  } 
+  
+  catch (error) {
+    console.error(`Logout All error: ${error} | from authController`);
+    res.status(500).json({ error: 'Logout failed' });
+  }
+};
