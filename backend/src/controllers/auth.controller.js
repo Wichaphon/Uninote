@@ -3,7 +3,7 @@ import prisma from "../lib/prisma.js";
 import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import { generateAccessToken, generateRefreshToken, saveRefreshToken, } from "../lib/jwt.js";
-import { SALT_ROUNDS, JWT_REFRESH_SECRET, JWT_ACCESS_EXPIRES_IN, NODE_ENV } from "../config/env.js";
+import { SALT_ROUNDS, JWT_REFRESH_SECRET, JWT_ACCESS_EXPIRES_IN, NODE_ENV, DEFAULT_AVATAR_URL } from "../config/env.js";
 import { validateEmail } from "../utils/validators.js";
 
 export const register = async (req, res) => {
@@ -41,12 +41,14 @@ export const register = async (req, res) => {
         password: hashedPassword,
         firstName,
         lastName,
+        avatar: DEFAULT_AVATAR_URL,
       },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        avatar: true,
         role: true,
         createdAt: true,
       },
