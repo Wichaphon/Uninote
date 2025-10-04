@@ -10,4 +10,12 @@ export const NODE_ENV = process.env.NODE_ENV;
 
 export const SALT_ROUNDS = process.env.SALT_ROUNDS;
 
+//cloudinary
+export const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+export const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
+export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+//Avatar
+export const DEFAULT_AVATAR_URL = process.env.DEFAULT_AVATAR_URL;
+
 

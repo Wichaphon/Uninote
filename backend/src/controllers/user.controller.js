@@ -38,3 +38,7 @@ export const getProfile = async(req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching the profile.' });
   }
 }
+
+export const updateProfile = async(req, res) => {
+  
+}
