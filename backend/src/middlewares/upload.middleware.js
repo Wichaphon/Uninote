@@ -26,7 +26,7 @@ const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error("อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น (JPG, PNG, WEBP)"), false);
+    cb(new Error("Only image files are allowed (JPG, PNG, WEBP)"), false);
   }
 };
 
