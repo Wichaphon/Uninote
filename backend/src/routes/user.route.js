@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middlewares/auth.middleware.js';
-import { changePassword, getProfile, updateProfile } from '../controllers/user.controller.js';
+import { changePassword, deleteAccount, getProfile, updateProfile } from '../controllers/user.controller.js';
 
 const router = express.Router();
 router.use(authenticate); //ให้ทัก route ต้อง authen
@@ -11,5 +11,6 @@ router.get("/me", getProfile);
 router.put("/me", updateProfile);
 
 router.put("/me/password", changePassword);
+router.delete("/me", deleteAccount);
 
 export default router;

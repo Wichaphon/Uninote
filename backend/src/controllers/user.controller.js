@@ -159,3 +159,40 @@ export const changePassword = async (req, res) => {
     res.status(500).json({ error: 'Failed to change password.' });
   }
 };
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'Please enter your password to confirm account deletion.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+    });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid password.' });
+    }
+
+    //ลบบัญชี Prisma cascadeลบ related dataทั้งหมดออก
+    await prisma.user.delete({
+      where: { id: req.user.id },
+    });
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/api/auth',
+    });
+
+    res.json({ message: 'Account deleted.' });
+  } catch (error) {
+    console.error(`Delete account error: ${error} | from userController`);
+    res.status(500).json({ error: 'Failed to delete account.' });
+  }
+};
