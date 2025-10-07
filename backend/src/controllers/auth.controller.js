@@ -24,8 +24,10 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "Invalid email format." });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -37,7 +39,7 @@ export const register = async (req, res) => {
 
     const user = await prisma.user.create({
       data: {
-        email,
+        email : normalizedEmail,
         password: hashedPassword,
         firstName,
         lastName,
