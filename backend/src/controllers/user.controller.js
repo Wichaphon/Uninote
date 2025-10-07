@@ -38,7 +38,7 @@ export const getProfile = async(req, res) => {
     console.error(`Get profile error: ${error} | from userController`);
     res.status(500).json({ error: 'Failed to get profile.' });
   }
-}
+};
 
 export const updateProfile = async(req, res) => {
   try {
@@ -102,4 +102,60 @@ export const updateProfile = async(req, res) => {
     console.error(`Update profile error: ${error} | from userController`);
     res.status(500).json({ error: 'Failed to update profile' });
   }
-}
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Please provide your current and new password.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+
+    //ดึงข้อมูล userกับ password
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+    });
+
+    //เช็ครหัสก่อนเปลี่ยน
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Incorrect current password.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.SALT_ROUNDS) || 10);
+
+    //update pass
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashedPassword },
+    });
+
+    //ลบ token ทุก device ออกหมด (บังคับ login ใหม่หมด)
+    await prisma.refreshToken.deleteMany({
+      where: { userId: req.user.id },
+    });
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/api/auth',
+    });
+
+    res.json({ 
+      message: 'Your password has been changed successfully. Please log in again.',
+      requireLogin: true,
+    });
+  } 
+  
+  catch (error) {
+    console.error(`Change password error: ${error} | from userController`);
+    res.status(500).json({ error: 'Failed to change password.' });
+  }
+};
