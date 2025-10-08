@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma.js';
+import cloudinary from '../lib/cloudinary.js';
 
 export const getProfile = async(req, res) => {
     try {
@@ -194,5 +195,61 @@ export const deleteAccount = async (req, res) => {
   } catch (error) {
     console.error(`Delete account error: ${error} | from userController`);
     res.status(500).json({ error: 'Failed to delete account.' });
+  }
+};
+
+export const uploadAvata = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please select an image.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { avatar: true },
+    });
+
+    //ลบรูปเดิมจาก Cloudinary (ยกเว้น DEFAULT_AVATAR_URL)
+    if (user.avatar && user.avatar !== process.env.DEFAULT_AVATAR_URL) {
+      try {
+
+        const urlParts = user.avatar.split('/');
+        const uploadIndex = urlParts.indexOf('upload');
+        
+        if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+          const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+          const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
+          
+          await cloudinary.uploader.destroy(publicId);
+          console.log(`Deleted old avatar: ${publicId}`);
+        }
+      } 
+      
+      catch (err) {
+        console.error('Delete old avatar error:', err);
+        
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: req.file.path },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatar: true,
+        role: true,
+      },
+    });
+
+    res.json({
+      message: "Avatar uploaded successfully.",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ error: 'Failed to upload profile picture.' });
   }
 };

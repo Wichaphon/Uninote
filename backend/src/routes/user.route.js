@@ -1,14 +1,17 @@
 import express from 'express';
 import { authenticate } from '../middlewares/auth.middleware.js';
-import { changePassword, deleteAccount, getProfile, updateProfile } from '../controllers/user.controller.js';
+import { changePassword, deleteAccount, getProfile, updateProfile, uploadAvata } from '../controllers/user.controller.js';
+import upload from '../middlewares/upload.middleware.js';
 
 const router = express.Router();
 router.use(authenticate); //ให้ทัก route ต้อง authen
 
-
 //Profile Manage
 router.get("/me", getProfile);
 router.put("/me", updateProfile);
+
+//Avatar Manage
+router.put("/me/avatar", upload.single("avatar"), uploadAvata);
 
 router.put("/me/password", changePassword);
 router.delete("/me", deleteAccount);
