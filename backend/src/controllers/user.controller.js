@@ -198,7 +198,7 @@ export const deleteAccount = async (req, res) => {
   }
 };
 
-export const uploadAvata = async (req, res) => {
+export const uploadAvatar = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Please select an image.' });
@@ -249,7 +249,60 @@ export const uploadAvata = async (req, res) => {
       user: updatedUser,
     });
   } catch (error) {
-    console.error('Upload avatar error:', error);
+    console.error(`Upload avatar error: ${error} | from userController`);
     res.status(500).json({ error: 'Failed to upload profile picture.' });
+  }
+};
+
+export const deleteAvatar = async(req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { avatar: true },
+    });
+
+    if (!user.avatar || user.avatar === process.env.DEFAULT_AVATAR_URL) {
+      return res.status(400).json({ error: 'You are already using the default avatar.' });
+    }
+
+    // ลบจาก Cloudinary
+    try {
+      const urlParts = user.avatar.split('/');
+      const uploadIndex = urlParts.indexOf('upload');
+      
+      if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+        const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+        const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
+        
+        await cloudinary.uploader.destroy(publicId);
+        console.log(`Deleted avatar: ${publicId}`);
+      }
+    } catch (err) {
+      console.error('Delete cloudinary avatar error:', err);
+    }
+
+    //เปลี่ยนกลับเป็น default avatar
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: process.env.DEFAULT_AVATAR_URL },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatar: true,
+        role: true,
+      },
+    });
+
+    res.json({
+      message: 'Avatar deleted successfully.',
+      user: updatedUser,
+    });
+  } 
+  
+  catch (error) {
+    console.error(`Delete avatar error: ${error} | from userController`);
+    res.status(500).json({ error: 'Failed to delete avatar.' });
   }
 };
