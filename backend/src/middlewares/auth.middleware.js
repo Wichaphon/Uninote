@@ -53,3 +53,17 @@ export const authenticate = async (req, res, next) => {
     return res.status(500).json({ error: 'An error occurred during authentication.' });
   }
 };
+
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required. Please log in.' });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden. You do not have the necessary permissions to access this resource.' });
+    }
+
+    next();
+  };
+};
