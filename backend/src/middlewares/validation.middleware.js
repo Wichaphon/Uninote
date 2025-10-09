@@ -13,24 +13,31 @@ export const validateSellerApplication = (req, res, next) => {
   //ShopName Validation
   if (!shopName || shopName.trim().length === 0) {
     errors.push('Shop name is required.');
-  } 
-  
-  else if (shopName.trim().length < 3) {
+  } else if (shopName.trim().length < 3) {
     errors.push('Shop name must be at least 3 characters.');
-  } 
-  
-  else if (shopName.trim().length > 100) {
+  } else if (shopName.trim().length > 100) {
     errors.push('Shop name must not exceed 100 characters.');
   }
 
-  //Description Validation 
+  //Description Validation
   if (description && description.trim().length > 500) {
     errors.push('Description must not exceed 500 characters.');
   }
 
   //Bank Account Validation 
-  if (bankAccount && bankAccount.trim().length > 50) {
-    errors.push('Bank account must not exceed 50 characters.');
+  if (bankAccount) {
+    const cleanedBankAccount = bankAccount.trim();
+    
+    if (cleanedBankAccount.length > 0) {
+      //เช็คว่าเป็นตัวเลขอย่างเดียว 
+      if (!/^\d+$/.test(cleanedBankAccount)) {
+        errors.push('Bank account must contain only numbers.');
+      } 
+      
+      else if (cleanedBankAccount.length < 10 || cleanedBankAccount.length > 15) {
+        errors.push('Bank account must be between 10-15 digits.');
+      }
+    }
   }
 
   if (errors.length > 0) {

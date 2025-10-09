@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
+import sellerRoutes from './routes/seller.route.js';
 
 dotenv.config({ path: "../.env" });
 
@@ -25,6 +26,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/seller", sellerRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server run on PORT : ${PORT}`)

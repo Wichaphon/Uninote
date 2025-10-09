@@ -54,6 +54,7 @@ model SellerProfile {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
+  @@index([shopName])
   @@map("seller_profiles")
 }
 
