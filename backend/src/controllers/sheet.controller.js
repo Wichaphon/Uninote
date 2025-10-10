@@ -156,3 +156,68 @@ export const getSheetById = async (req, res) => {
     res.status(500).json({ error: 'Failed to get sheet.' });
   }
 };
+
+export const createSheet = async (req, res) => {
+  try {
+    const { title, description, subject, year, faculty, department, university, price } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'PDF file is required.' });
+    }
+
+    const trimmedData = {
+      title: title.trim(),
+      description: description.trim(),
+      subject: subject.trim(),
+      year: year?.trim() || null,
+      faculty: faculty?.trim() || null,
+      department: department?.trim() || null,
+      university: university?.trim() || null,
+      price: parseFloat(price),
+      fileUrl: req.file.path, 
+      sellerId: req.user.id,
+    };
+
+    const sheet = await prisma.sheet.create({
+      data: trimmedData,
+      include: {
+        seller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            sellerProfile: {
+              select: {
+                shopName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: 'Sheet created successfully.',
+      sheet,
+    });
+  } catch (error) {
+    console.error(`Create sheet error: ${error} | from sheetController`);
+    
+    //ถ้าerrแล้ว PDF upload ไปแล้วจะลบออกจาก Cloudinary ก่อน
+    if (req.file) {
+      try {
+        const urlParts = req.file.path.split('/');
+        const uploadIndex = urlParts.indexOf('upload');
+        if (uploadIndex !== -1) {
+          const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+          const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
+          await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        }
+      } catch (deleteErr) {
+        console.error('Failed to delete uploaded PDF after error:', deleteErr);
+      }
+    }
+
+    res.status(500).json({ error: 'Failed to create sheet.' });
+  }
+};
