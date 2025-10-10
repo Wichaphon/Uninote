@@ -87,6 +87,10 @@ model Sheet {
   @@index([university])
   @@index([faculty])
   @@index([sellerId])
+  @@index([isActive])      
+  @@index([createdAt])     
+  @@index([price])         
+  @@index([purchaseCount]) 
   @@map("sheets")
 }
 
