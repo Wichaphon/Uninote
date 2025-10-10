@@ -47,6 +47,47 @@ export const validateSellerApplication = (req, res, next) => {
   next();
 };
 
+export const validateSellerUpdate = (req, res, next) => {
+  const { shopName, description, bankAccount } = req.body;
+  const errors = [];
+
+  if (shopName === undefined && description === undefined && bankAccount === undefined) {
+    return res.status(400).json({ 
+      error: 'Please provide at least one field to update.' 
+    });
+  }
+
+  //ShopName Validation 
+  if (shopName !== undefined) {
+    if (shopName.trim().length === 0) {
+      errors.push('Shop name cannot be empty.');
+    } else if (shopName.trim().length < 3) {
+      errors.push('Shop name must be at least 3 characters.');
+    } else if (shopName.trim().length > 100) {
+      errors.push('Shop name must not exceed 100 characters.');
+    }
+  }
+
+  //Description Validation 
+  if (description !== undefined && description.trim().length > 500) {
+    errors.push('Description must not exceed 500 characters.');
+  }
+
+  //Bank Account Validation 
+  if (bankAccount !== undefined && bankAccount.trim().length > 0) {
+    const cleanedBankAccount = bankAccount.replace(/\D/g, '');
+    if (cleanedBankAccount.length < 10 || cleanedBankAccount.length > 15) {
+      errors.push('Bank account must be between 10-15 digits.');
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  next();
+};
+
 export const validateSheetCreation = (req, res, next) => {
   const { title, description, subject, price } = req.body;
   const errors = [];

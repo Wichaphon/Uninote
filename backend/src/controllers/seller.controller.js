@@ -103,3 +103,94 @@ export const getSellerProfile = async (req, res) => {
     res.status(500).json({ error: 'Failed to get seller profile.' });
   }
 };
+
+export const updateSellerProfile = async (req, res) => {
+  try {
+    let { shopName, description, bankAccount } = req.body;
+
+    const sellerProfile = await prisma.sellerProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!sellerProfile) {
+      return res.status(404).json({ error: 'Seller profile not found.' });
+    }
+
+    if (shopName !== undefined) {
+      shopName = shopName.trim();
+    }
+    
+    if (description !== undefined) {
+      description = description.trim();
+      if (description.length === 0) {
+        description = null;
+      }
+    }
+    
+    if (bankAccount !== undefined) {
+      bankAccount = bankAccount.trim().replace(/\D/g, '');
+      if (bankAccount.length === 0) {
+        bankAccount = null;
+      }
+    }
+
+    //เช็ค shop name ซ้ำถ้ามีการเปลี่ยน
+    if (shopName !== undefined && shopName !== sellerProfile.shopName) {
+      const existingShopName = await prisma.sellerProfile.findFirst({
+        where: { 
+          shopName: {
+            equals: shopName,
+            mode: 'insensitive'
+          },
+          userId: {
+            not: req.user.id
+          }
+        },
+      });
+
+      if (existingShopName) {
+        return res.status(400).json({ 
+          error: 'This shop name is already taken. Please choose another name.' 
+        });
+      }
+    }
+
+    const updateData = {};
+    
+    if (shopName !== undefined) {
+      updateData.shopName = shopName;
+    }
+    
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+    
+    if (bankAccount !== undefined) {
+      updateData.bankAccount = bankAccount;
+    }
+
+    //Update
+    const updatedProfile = await prisma.sellerProfile.update({
+      where: { userId: req.user.id },
+      data: updateData,
+      select: {
+        id: true,
+        shopName: true,
+        description: true,
+        bankAccount: true,
+        status: true,
+        approvedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json({
+      message: 'Seller profile updated successfully.',
+      sellerProfile: updatedProfile,
+    });
+  } catch (error) {
+    console.error(`Update seller profile error: ${error} | from sellerController`);
+    res.status(500).json({ error: 'Failed to update seller profile.' });
+  }
+};
