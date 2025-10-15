@@ -221,3 +221,43 @@ export const createSheet = async (req, res) => {
     res.status(500).json({ error: 'Failed to create sheet.' });
   }
 };
+
+export const getMySheets = async (req , res) => {
+  try {
+    const { page = 1, limit = 20, isActive } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    const where = {
+      sellerId: req.user.id,
+    };
+
+    if (isActive !== undefined) {
+      where.isActive = isActive === 'true';
+    }
+
+    const [sheets, total] = await Promise.all([
+      prisma.sheet.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.sheet.count({ where }),
+    ]);
+
+    res.json({
+      sheets,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / take),
+      },
+    });
+  } catch (error) {
+    console.error(`Get my sheets error: ${error} | from sheetController`);
+    res.status(500).json({ error: 'Failed to get your sheets.' });
+  }
+};
