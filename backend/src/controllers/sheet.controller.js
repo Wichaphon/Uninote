@@ -362,3 +362,36 @@ export const updateSheet = async(req, res) => {
     res.status(500).json({ error: 'Failed to update sheet.' });
   }
 };
+
+export const deleteSheet = async(req, res) => {
+  try {
+    const { id } = req.params;
+
+    const sheet = await prisma.sheet.findUnique({
+      where: { id },
+    });
+
+    if (!sheet) {
+      return res.status(404).json({ error: 'Sheet not found.' });
+    }
+
+    if (sheet.sellerId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'You do not have permission to delete this sheet.' });
+    }
+
+    //Soft delete
+    await prisma.sheet.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    res.json({
+      message: 'Sheet deleted successfully.',
+    });
+  } 
+  
+  catch (error) {
+    console.error(`Delete sheet error: ${error} | from sheetController`);
+    res.status(500).json({ error: 'Failed to delete sheet.' });
+  }
+};
