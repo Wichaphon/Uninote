@@ -18,7 +18,7 @@ router.post("/", authenticate, authorize('SELLER', 'ADMIN'), uploadPdf.single('p
 router.get("/my/sheets", authenticate, authorize('SELLER', 'ADMIN'), validatePagination, getMySheets);
 
 //แก้ไข sheet ของตัวเอง
-router.put("/:id", authenticate, authorize('SELLER', 'ADMIN'), uploadPdf.single('pdf') /*optional*/, validateSheetUpdate, updateSheet);
+router.put("/:id", authenticate, authorize('SELLER', 'ADMIN'), uploadPdf.single('pdf'), validateSheetUpdate, updateSheet);
 
 //ลบ sheet
 router.delete("/:id" , authenticate, authorize('SELLER', 'ADMIN'), deleteSheet);
