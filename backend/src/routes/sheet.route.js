@@ -1,6 +1,6 @@
 import express from 'express';
-import { validatePagination, validateSheetCreation } from '../middlewares/validation.middleware.js';
-import { createSheet, getAllSheets, getMySheets, getSheetById } from '../controllers/sheet.controller.js';
+import { validatePagination, validateSheetCreation, validateSheetUpdate } from '../middlewares/validation.middleware.js';
+import { createSheet, getAllSheets, getMySheets, getSheetById, updateSheet } from '../controllers/sheet.controller.js';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
 import uploadPdf from '../middlewares/uploadPdf.middleware.js';
 
@@ -16,5 +16,8 @@ router.post("/", authenticate, authorize('SELLER', 'ADMIN'), uploadPdf.single('p
 
 //ดูsheetตัวเอง (ของ seller เอง)
 router.get("/my/sheets", authenticate, authorize('SELLER', 'ADMIN'), validatePagination, getMySheets);
+
+//แก้ไข sheet ของตัวเอง
+router.put("/:id", authenticate, authorize('SELLER', 'ADMIN'), uploadPdf.single('pdf') /*optional*/, validateSheetUpdate, updateSheet);
 
 export default router;

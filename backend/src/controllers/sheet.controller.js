@@ -261,3 +261,104 @@ export const getMySheets = async (req , res) => {
     res.status(500).json({ error: 'Failed to get your sheets.' });
   }
 };
+
+export const updateSheet = async(req, res) => {
+  try {
+    const { id } = req.params;
+    let { title, description, subject, year, faculty, department, university, price } = req.body;
+
+    const sheet = await prisma.sheet.findUnique({
+      where: { id },
+    });
+
+    if (!sheet) {
+      return res.status(404).json({ error: 'Sheet not found.' });
+    }
+
+    if (sheet.sellerId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'You do not have permission to edit this sheet.' });
+    }
+
+    const updateData = {};
+
+    if (title !== undefined) {
+      updateData.title = title.trim();
+    }
+
+    if (description !== undefined) {
+      updateData.description = description.trim();
+    }
+
+    if (subject !== undefined) {
+      updateData.subject = subject.trim();
+    }
+
+    if (year !== undefined) {
+      updateData.year = year.trim() || null;
+    }
+
+    if (faculty !== undefined) {
+      updateData.faculty = faculty.trim() || null;
+    }
+
+    if (department !== undefined) {
+      updateData.department = department.trim() || null;
+    }
+
+    if (university !== undefined) {
+      updateData.university = university.trim() || null;
+    }
+
+    if (price !== undefined) {
+      updateData.price = parseFloat(price);
+    }
+
+    //ถ้า upload PDF ใหม่
+    if (req.file) {
+      //ลบ PDF เก่าจาก Cloudinary
+      try {
+        const urlParts = sheet.fileUrl.split('/');
+        const uploadIndex = urlParts.indexOf('upload');
+        if (uploadIndex !== -1) {
+          const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+          const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
+          await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        }
+      } 
+      catch (deleteErr) {
+        console.error('Delete old PDF error:', deleteErr);
+      }
+
+      updateData.fileUrl = req.file.path;
+    }
+
+    const updatedSheet = await prisma.sheet.update({
+      where: { id },
+      data: updateData,
+      include: {
+        seller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            sellerProfile: {
+              select: {
+                shopName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.json({
+      message: 'Sheet updated successfully.',
+      sheet: updatedSheet,
+    });
+  } 
+  
+  catch (error) {
+    console.error(`Update sheet error: ${error} | from sheetController`);
+    res.status(500).json({ error: 'Failed to update sheet.' });
+  }
+};
