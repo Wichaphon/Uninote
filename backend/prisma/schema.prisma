@@ -19,6 +19,13 @@ enum SellerStatus {
   REJECTED
 }
 
+enum PurchaseStatus {
+  PENDING      //รอชำระเงิน 
+  COMPLETED    //ชำระเงินสำเร็จ 
+  FAILED       //ชำระเงินไม่สำเร็จ
+  REFUNDED     //คืนเงิน
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
@@ -95,20 +102,29 @@ model Sheet {
 }
 
 model Purchase {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User           @relation(fields: [userId], references: [id])
   
   sheetId     String
-  sheet       Sheet    @relation(fields: [sheetId], references: [id])
+  sheet       Sheet          @relation(fields: [sheetId], references: [id])
   
-  price       Decimal  @db.Decimal(10, 2)
-  purchasedAt DateTime @default(now())
+  price       Decimal        @db.Decimal(10, 2)
+  status      PurchaseStatus @default(PENDING)
   
-  @@unique([userId, sheetId])
+  //Stripe 
+  stripeSessionId    String?  @unique //Checkout Session ID
+  stripePaymentIntentId String? @unique //Payment Intent ID
+  
+  purchasedAt DateTime       @default(now())
+  completedAt DateTime?      
+  
+  @@unique([userId, sheetId]) 
   @@index([userId])
   @@index([sheetId])
+  @@index([status])
+  @@index([stripeSessionId])
   @@map("purchases")
 }
 
