@@ -7,12 +7,17 @@ import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
 import sellerRoutes from './routes/seller.route.js';
 import sheetRoutes from './routes/sheet.route.js';
+import purchaseRoutes from './routes/purchase.route.js';
+
+import { stripeWebhook } from './controllers/purchase.controller.js';
 
 dotenv.config({ path: "../.env" });
 
 const PORT = process.env.PORT;
 
 const app = express();
+
+app.post('/api/purchases/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -29,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/sheets", sheetRoutes);
+app.use("/api/purchases", purchaseRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server run on PORT : ${PORT}`)
