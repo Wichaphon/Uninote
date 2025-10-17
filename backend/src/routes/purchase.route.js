@@ -1,8 +1,9 @@
 import express from "express";
-import { stripeWebhook } from "../controllers/purchase.controller.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { createPurchase } from "../controllers/purchase.controller.js";
 
 const router = express.Router();
 
-// router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
+router.post("/:sheetId", authenticate, createPurchase);
 
 export default router;
