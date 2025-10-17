@@ -18,4 +18,12 @@ export const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 //Avatar
 export const DEFAULT_AVATAR_URL = process.env.DEFAULT_AVATAR_URL;
 
+//Stripe
+export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+export const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY;   
+export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+
+//Frontend URL
+export const FRONTEND_URL = process.env.FRONTEND_URL;
+
 
