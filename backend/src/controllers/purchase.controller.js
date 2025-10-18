@@ -21,13 +21,13 @@ export const createPurchase = async (req, res) => {
         if (existingPurchase && existingPurchase.status === 'COMPLETED') {
             return res.status(400).json({ error: 'You have already purchased this sheet.' });
         }
-    
+
         //สร้างใบสั่งซื้อ สถานะ PENDING 
         //ถ้ามีใบเก่าที่ FAILED หรือ PENDING อยู่แล้ว ให้ใช้ใบเดิม ไม่ต้องสร้างใหม่
-        const purchase = existingPurchase 
+        const purchase = existingPurchase
             ? await prisma.purchase.update({
                 where: { id: existingPurchase.id },
-                data: { price: sheet.price } 
+                data: { price: sheet.price }
             })
             : await prisma.purchase.create({
                 data: {
@@ -75,7 +75,7 @@ export const createPurchase = async (req, res) => {
             purchase: updatedPurchase,
         });
 
-    } 
+    }
     catch (error) {
         console.error(`Create purchase error: ${error} | from purchaseController`);
         res.status(500).json({ error: 'Failed to create purchase.' });
@@ -135,4 +135,68 @@ export const stripeWebhook = async (req, res) => {
     }
 
     res.json({ received: true });
+};
+
+export const getMyPurchases = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, status } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+
+        const where = {
+            userId: req.user.id,
+        };
+
+        if (status) {
+            where.status = status;
+        }
+
+        const [purchases, total] = await Promise.all([
+            prisma.purchase.findMany({
+                where,
+                skip,
+                take,
+                include: {
+                    sheet: {
+                        select: {
+                            id: true,
+                            title: true,
+                            description: true,
+                            subject: true,
+                            price: true,
+                            thumbnailUrl: true,
+                            seller: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    sellerProfile: {
+                                        select: {
+                                            shopName: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                orderBy: { purchasedAt: 'desc' },
+            }),
+            prisma.purchase.count({ where }),
+        ]);
+
+        res.json({
+            purchases,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    } catch (error) {
+        console.error(`Get my purchases error: ${error} | from purchaseController`);
+        res.status(500).json({ error: 'Failed to get purchases.' });
+    }
 };
