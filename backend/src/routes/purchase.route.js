@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticate } from "../middlewares/auth.middleware.js";
+import { authenticate, authorize } from "../middlewares/auth.middleware.js";
 import { checkPurchaseStatus, createPurchase, downloadPurchasedSheet, getMyPurchases, getMySales } from "../controllers/purchase.controller.js";
 import { validatePagination } from "../middlewares/validation.middleware.js";
 
