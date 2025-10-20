@@ -200,3 +200,27 @@ export const getMyPurchases = async (req, res) => {
         res.status(500).json({ error: 'Failed to get purchases.' });
     }
 };
+
+export const checkPurchaseStatus = async (req, res) => {
+    try {
+        const { sheetId } = req.params;
+
+        const purchase = await prisma.purchase.findUnique({
+            where: {
+                userId_sheetId: {
+                    userId: req.user.id,
+                    sheetId,
+                },
+            },
+        });
+
+        res.json({
+            purchased: !!purchase && purchase.status === 'COMPLETED',
+            status: purchase?.status || null,
+            purchase: purchase || null,
+        });
+    } catch (error) {
+        console.error(`Check purchase status error: ${error} | from purchaseController`);
+        res.status(500).json({ error: 'Failed to check purchase status.' });
+    }
+};
