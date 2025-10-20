@@ -224,3 +224,70 @@ export const checkPurchaseStatus = async (req, res) => {
         res.status(500).json({ error: 'Failed to check purchase status.' });
     }
 };
+
+export const downloadPurchasedSheet = async (req, res) => {
+    try {
+        const { sheetId } = req.params;
+
+        const purchase = await prisma.purchase.findUnique({
+            where: {
+                userId_sheetId: {
+                    userId: req.user.id,
+                    sheetId,
+                },
+            },
+            include: {
+                sheet: true,
+            },
+        });
+
+        if (!purchase) {
+            return res.status(403).json({ error: 'You have not purchased this sheet.' });
+        }
+
+        if (purchase.status !== 'COMPLETED') {
+            return res.status(403).json({
+                error: 'Payment has not been completed yet.',
+                status: purchase.status,
+            });
+        }
+
+        const urlParts = purchase.sheet.fileUrl.split('/');
+        const uploadIndex = urlParts.indexOf('upload');
+
+        if (uploadIndex === -1) {
+            console.error('Invalid Cloudinary URL:', purchase.sheet.fileUrl);
+            return res.status(500).json({ error: 'Invalid file URL format.' });
+        }
+
+        const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+        const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
+
+        console.log('Public ID:', publicId);
+
+        const downloadUrl = cloudinary.url(publicId, {
+            resource_type: 'raw',
+            type: 'upload',
+            secure: true,
+            sign_url: true,
+            flags: 'attachment', //บังคับดาวน์โหลด
+            expires_at: Math.floor(Date.now() / 1000) + 3600, //expire ใน 1 ชั่วโมง
+        });
+
+        res.json({
+            downloadUrl,
+            expiresIn: 3600,
+            sheet: {
+                id: purchase.sheet.id,
+                title: purchase.sheet.title,
+                subject: purchase.sheet.subject,
+                description: purchase.sheet.description,
+            },
+        });
+    }
+
+    catch (error) {
+        console.error(`Download purchased sheet error: ${error} | from purchaseController`);
+        res.status(500).json({ error: 'Failed to download sheet.' });
+    }
+};
