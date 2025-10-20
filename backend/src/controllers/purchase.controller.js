@@ -291,3 +291,74 @@ export const downloadPurchasedSheet = async (req, res) => {
         res.status(500).json({ error: 'Failed to download sheet.' });
     }
 };
+
+export const getMySales = async (req, res) => {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+
+        const sheets = await prisma.sheet.findMany({
+            where: { sellerId: req.user.id },
+            select: { id: true },
+        });
+
+        const sheetIds = sheets.map(s => s.id);
+
+        const where = {
+            sheetId: { in: sheetIds },
+            status: 'COMPLETED', //เฉพาะที่ชำระเงินสำเร็จ
+        };
+
+        const [sales, total, totalRevenue] = await Promise.all([
+            prisma.purchase.findMany({
+                where,
+                skip,
+                take,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            firstName: true,
+                            lastName: true,
+                        },
+                    },
+                    sheet: {
+                        select: {
+                            id: true,
+                            title: true,
+                            subject: true,
+                            price: true,
+                        },
+                    },
+                },
+                orderBy: { completedAt: 'desc' },
+            }),
+            prisma.purchase.count({ where }),
+            prisma.purchase.aggregate({
+                where,
+                _sum: { price: true },
+            }),
+        ]);
+
+        res.json({
+            sales,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / take),
+            },
+            totalRevenue: totalRevenue._sum.price || 0,
+        });
+    } 
+    
+    catch (error) {
+        console.error(`Get my sales error: ${error} | from purchaseController`);
+        res.status(500).json({ error: 'Failed to get sales.' });
+    }
+};
+
+
