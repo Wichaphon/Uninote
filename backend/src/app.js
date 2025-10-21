@@ -8,6 +8,7 @@ import userRoutes from './routes/user.route.js';
 import sellerRoutes from './routes/seller.route.js';
 import sheetRoutes from './routes/sheet.route.js';
 import purchaseRoutes from './routes/purchase.route.js';
+import adminRoutes from './routes/admin.route.js';
 
 import { stripeWebhook } from './controllers/purchase.controller.js';
 
@@ -35,6 +36,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/sheets", sheetRoutes);
 app.use("/api/purchases", purchaseRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server run on PORT : ${PORT}`)
