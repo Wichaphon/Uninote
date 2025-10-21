@@ -78,3 +78,36 @@ export const approveSeller = async (req, res) => {
         res.status(500).json({ error: 'Failed to approve seller.' });
     }
 };
+
+export const rejectSeller = async (req, res) => {
+    try {
+        const { sellerId } = req.params;
+
+        const sellerProfile = await prisma.sellerProfile.findUnique({
+            where: { id: sellerId },
+        });
+
+        if (!sellerProfile) {
+            return res.status(404).json({ error: 'Seller profile not found.' });
+        }
+
+        if (sellerProfile.status !== 'PENDING') {
+            return res.status(400).json({
+                error: `Seller application has already been ${sellerProfile.status.toLowerCase()}.`
+            });
+        }
+
+        await prisma.sellerProfile.update({
+            where: { id: sellerId },
+            data: { status: 'REJECTED' },
+        });
+
+        res.json({
+            message: 'Seller application rejected.',
+        });
+    } 
+    catch (error) {
+        console.error(`Reject seller error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to reject seller.' });
+    }
+};
