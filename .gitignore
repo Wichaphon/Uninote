@@ -145,3 +145,6 @@ build/
 # Prisma
 prisma/migrations/
 /generated/prisma
+
+#Admin script
+createAdmin.js
