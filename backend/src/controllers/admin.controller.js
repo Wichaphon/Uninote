@@ -383,9 +383,74 @@ export const getDashboardStats = async (req, res) => {
                 totalRevenue: totalRevenue._sum.price || 0,
             },
         });
-    } 
+    }
     catch (error) {
         console.error(`Get dashboard stats error: ${error} | from adminController`);
         res.status(500).json({ error: 'Failed to get dashboard statistics.' });
+    }
+};
+
+export const getAllPurchases = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, status } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+
+        const where = {};
+
+        if (status) {
+            where.status = status;
+        }
+
+        const [purchases, total] = await Promise.all([
+            prisma.purchase.findMany({
+                where,
+                skip,
+                take,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            firstName: true,
+                            lastName: true,
+                        },
+                    },
+                    sheet: {
+                        select: {
+                            id: true,
+                            title: true,
+                            subject: true,
+                            price: true,
+                            seller: {
+                                select: {
+                                    id: true,
+                                    email: true,
+                                    firstName: true,
+                                    lastName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                orderBy: { purchasedAt: 'desc' },
+            }),
+            prisma.purchase.count({ where }),
+        ]);
+
+        res.json({
+            purchases,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    }
+    catch (error) {
+        console.error(`Get all purchases error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to get purchases.' });
     }
 };
