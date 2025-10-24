@@ -41,6 +41,7 @@ model User {
   sellerProfile SellerProfile?
   sheets        Sheet[]        @relation("SellerSheets")
   purchases     Purchase[]
+  reviews       Review[]
   refreshTokens RefreshToken[]
   
   @@map("users")
@@ -84,11 +85,15 @@ model Sheet {
   isActive     Boolean    @default(true)
   viewCount    Int        @default(0)
   purchaseCount Int       @default(0)
+
+  averageRating Decimal?  @db.Decimal(3, 2) 
+  reviewCount   Int       @default(0)
   
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   
   purchases    Purchase[]
+  reviews      Review[]
   
   @@index([subject])
   @@index([university])
@@ -97,8 +102,29 @@ model Sheet {
   @@index([isActive])      
   @@index([createdAt])     
   @@index([price])         
-  @@index([purchaseCount]) 
+  @@index([purchaseCount])
+  @@index([averageRating])
   @@map("sheets")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  sheetId   String
+  sheet     Sheet    @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  
+  rating    Int    
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, sheetId])
+  @@index([sheetId])
+  @@index([userId])
+  @@map("reviews")
 }
 
 model Purchase {
