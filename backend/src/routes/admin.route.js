@@ -24,7 +24,7 @@ router.patch('/sheets/:sheetId/toggle-status', toggleSheetStatus);
 router.get('/stats/dashboard', getDashboardStats);
 
 //Purchase Management
-
+router.get('/purchases', validatePagination, getAllPurchases);
 
 
 export default router;
