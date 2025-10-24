@@ -182,3 +182,64 @@ export const getAllUsers = async (req, res) => {
         res.status(500).json({ error: 'Failed to get users.' });
     }
 };
+
+export const toggleUserStatus = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        //ห้าม toggle ตัวเอง
+        if (userId === req.user.id) {
+            return res.status(400).json({ error: 'You cannot toggle your own account status.' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true, isActive: true, role: true },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        //ห้าม toggle admin อื่น
+        if (user.role === 'ADMIN') {
+            return res.status(403).json({ error: 'You cannot toggle another admin account.' });
+        }
+
+        const newStatus = !user.isActive;
+
+        const updatedUser = await prisma.$transaction(async (tx) => {
+            const updatedUserData = await tx.user.update({
+                where: { id: userId },
+                data: { isActive: newStatus },
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    isActive: true,
+                    role: true,
+                },
+            });
+
+            if (newStatus === false) {
+                await tx.refreshToken.deleteMany({
+                    where: { userId },
+                });
+            }
+
+            return updatedUserData;
+
+        });
+
+        res.json({
+            message: `User account ${updatedUser.isActive ? 'activated' : 'suspended'} successfully.`,
+            user: updatedUser,
+        });
+    }
+    
+    catch (error) {
+        console.error(`Toggle user status error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to toggle user status.' });
+    }
+};
