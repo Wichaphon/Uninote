@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
-import { approveSeller, getPendingSellers, rejectSeller } from '../controllers/admin.controller.js';
+import { approveSeller, getAllUsers, getPendingSellers, rejectSeller } from '../controllers/admin.controller.js';
+import { validatePagination } from '../middlewares/validation.middleware.js';
 
 const router = express.Router();
 
@@ -10,5 +11,8 @@ router.use(authenticate, authorize('ADMIN'));
 router.get("/sellers/pending", getPendingSellers);
 router.post('/sellers/:sellerId/approve', approveSeller);
 router.post('/sellers/:sellerId/reject', rejectSeller);
+
+//User Management
+router.get("/users", validatePagination, getAllUsers);
 
 export default router;

@@ -105,9 +105,80 @@ export const rejectSeller = async (req, res) => {
         res.json({
             message: 'Seller application rejected.',
         });
-    } 
+    }
     catch (error) {
         console.error(`Reject seller error: ${error} | from adminController`);
         res.status(500).json({ error: 'Failed to reject seller.' });
+    }
+};
+
+export const getAllUsers = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, role, isActive, search } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+
+        const where = {
+            role: { not: 'ADMIN' },
+        };
+
+        if (role) {
+            where.role = role;
+        }
+
+        if (isActive !== undefined) {
+            where.isActive = isActive === 'true';
+        }
+
+        if (search) {
+            where.OR = [
+                { email: { contains: search, mode: 'insensitive' } },
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        const [users, total] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                skip,
+                take,
+                select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    avatar: true,
+                    role: true,
+                    isActive: true,
+                    createdAt: true,
+                    sellerProfile: {
+                        select: {
+                            id: true,
+                            shopName: true,
+                            status: true,
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            }),
+            prisma.user.count({ where }),
+        ]);
+
+        res.json({
+            users,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    }
+
+    catch (error) {
+        console.error(`Get all users error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to get users.' });
     }
 };
