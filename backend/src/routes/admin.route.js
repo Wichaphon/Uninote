@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate, authorize } from '../middlewares/auth.middleware.js';
-import { approveSeller, getAllSheetsAdmin, getAllUsers, getPendingSellers, rejectSeller, toggleUserStatus } from '../controllers/admin.controller.js';
+import { approveSeller, getAllSheetsAdmin, getAllUsers, getPendingSellers, rejectSeller, toggleSheetStatus, toggleUserStatus } from '../controllers/admin.controller.js';
 import { validatePagination } from '../middlewares/validation.middleware.js';
 
 const router = express.Router();
@@ -18,5 +18,6 @@ router.patch("/users/:userId/toggle-status", toggleUserStatus);
 
 //Sheet Management
 router.get("/sheets", validatePagination, getAllSheetsAdmin);
+router.patch('/sheets/:sheetId/toggle-status', toggleSheetStatus);
 
 export default router;

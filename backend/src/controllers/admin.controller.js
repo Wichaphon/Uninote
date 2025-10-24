@@ -298,9 +298,44 @@ export const getAllSheetsAdmin = async (req, res) => {
                 totalPages: Math.ceil(total / take),
             },
         });
-    } 
+    }
     catch (error) {
         console.error(`Get all sheets admin error: ${error} | from adminController`);
         res.status(500).json({ error: 'Failed to get sheets.' });
+    }
+};
+
+export const toggleSheetStatus = async (req, res) => {
+    try {
+        const { sheetId } = req.params;
+
+        const sheet = await prisma.sheet.findUnique({
+            where: { id: sheetId },
+            select: { id: true, title: true, isActive: true },
+        });
+
+        if (!sheet) {
+            return res.status(404).json({ error: 'Sheet not found.' });
+        }
+
+        const updatedSheet = await prisma.sheet.update({
+            where: { id: sheetId },
+            data: { isActive: !sheet.isActive },
+            select: {
+                id: true,
+                title: true,
+                isActive: true,
+                updatedAt: true,
+            },
+        });
+
+        res.json({
+            message: `Sheet ${updatedSheet.isActive ? 'activated' : 'deactivated'} successfully.`,
+            sheet: updatedSheet,
+        });
+    }
+    catch (error) {
+        console.error(`Toggle sheet status error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to toggle sheet status.' });
     }
 };
