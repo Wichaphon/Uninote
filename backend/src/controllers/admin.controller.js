@@ -339,3 +339,53 @@ export const toggleSheetStatus = async (req, res) => {
         res.status(500).json({ error: 'Failed to toggle sheet status.' });
     }
 };
+
+export const getDashboardStats = async (req, res) => {
+    try {
+        const [
+            totalUsers,
+            totalSellers,
+            pendingSellers,
+            totalSheets,
+            activeSheets,
+            totalPurchases,
+            completedPurchases,
+            totalRevenue,
+        ] = await Promise.all([
+            prisma.user.count({ where: { role: { not: 'ADMIN' } } }),
+            prisma.user.count({ where: { role: 'SELLER' } }),
+            prisma.sellerProfile.count({ where: { status: 'PENDING' } }),
+            prisma.sheet.count(),
+            prisma.sheet.count({ where: { isActive: true } }),
+            prisma.purchase.count(),
+            prisma.purchase.count({ where: { status: 'COMPLETED' } }),
+            prisma.purchase.aggregate({
+                where: { status: 'COMPLETED' },
+                _sum: { price: true },
+            }),
+        ]);
+
+        res.json({
+            users: {
+                total: totalUsers,
+                sellers: totalSellers,
+                pendingSellers,
+            },
+            sheets: {
+                total: totalSheets,
+                active: activeSheets,
+                inactive: totalSheets - activeSheets,
+            },
+            purchases: {
+                total: totalPurchases,
+                completed: completedPurchases,
+                pending: totalPurchases - completedPurchases,
+                totalRevenue: totalRevenue._sum.price || 0,
+            },
+        });
+    } 
+    catch (error) {
+        console.error(`Get dashboard stats error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to get dashboard statistics.' });
+    }
+};
