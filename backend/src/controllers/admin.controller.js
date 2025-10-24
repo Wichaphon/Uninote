@@ -237,9 +237,70 @@ export const toggleUserStatus = async (req, res) => {
             user: updatedUser,
         });
     }
-    
+
     catch (error) {
         console.error(`Toggle user status error: ${error} | from adminController`);
         res.status(500).json({ error: 'Failed to toggle user status.' });
+    }
+};
+
+export const getAllSheetsAdmin = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, isActive, search } = req.query;
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+
+        const where = {};
+
+        if (isActive !== undefined) {
+            where.isActive = isActive === 'true';
+        }
+
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { subject: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        const [sheets, total] = await Promise.all([
+            prisma.sheet.findMany({
+                where,
+                skip,
+                take,
+                include: {
+                    seller: {
+                        select: {
+                            id: true,
+                            email: true,
+                            firstName: true,
+                            lastName: true,
+                            sellerProfile: {
+                                select: {
+                                    shopName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            }),
+            prisma.sheet.count({ where }),
+        ]);
+
+        res.json({
+            sheets,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    } 
+    catch (error) {
+        console.error(`Get all sheets admin error: ${error} | from adminController`);
+        res.status(500).json({ error: 'Failed to get sheets.' });
     }
 };
