@@ -105,3 +105,33 @@ export const getMyReview = async (req, res) => {
         res.status(500).json({ error: 'Failed to get review.' });
     }
 };
+
+export const getSheetRating = async (req, res) => {
+  try {
+    const { sheetId } = req.params;
+
+    const sheet = await prisma.sheet.findUnique({
+      where: { id: sheetId },
+      select: {
+        id: true,
+        title: true,
+        averageRating: true,
+        reviewCount: true,
+      },
+    });
+
+    if (!sheet) {
+      return res.status(404).json({ error: 'Sheet not found.' });
+    }
+
+    res.json({
+      sheetId: sheet.id,
+      title: sheet.title,
+      averageRating: sheet.averageRating ? parseFloat(sheet.averageRating) : null,
+      reviewCount: sheet.reviewCount,
+    });
+  } catch (error) {
+    console.error(`Get sheet rating error: ${error} | from reviewController`);
+    res.status(500).json({ error: 'Failed to get rating.' });
+  }
+};
