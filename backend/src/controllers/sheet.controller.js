@@ -3,11 +3,11 @@ import cloudinary from "../lib/cloudinary.js";
 
 export const getAllSheets = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 20, 
-      subject, 
-      university, 
+    const {
+      page = 1,
+      limit = 20,
+      subject,
+      university,
       faculty,
       department,
       minPrice,
@@ -21,7 +21,7 @@ export const getAllSheets = async (req, res) => {
     const take = parseInt(limit);
 
     const where = {
-      isActive: true, 
+      isActive: true,
     };
 
     if (subject) {
@@ -62,7 +62,22 @@ export const getAllSheets = async (req, res) => {
         where,
         skip,
         take,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          subject: true,
+          year: true,
+          faculty: true,
+          department: true,
+          university: true,
+          price: true,
+          thumbnailUrl: true,
+          viewCount: true,
+          purchaseCount: true,
+          averageRating: true,
+          reviewCount: true,
+          createdAt: true,
           seller: {
             select: {
               id: true,
@@ -82,8 +97,14 @@ export const getAllSheets = async (req, res) => {
       prisma.sheet.count({ where }),
     ]);
 
+    const formattedSheets = sheets.map(sheet => ({
+      ...sheet,
+      price: parseFloat(sheet.price),
+      averageRating: sheet.averageRating ? parseFloat(sheet.averageRating) : null,
+    }));
+
     res.json({
-      sheets,
+      sheets: formattedSheets, // 
       pagination: {
         total,
         page: parseInt(page),
@@ -91,7 +112,8 @@ export const getAllSheets = async (req, res) => {
         totalPages: Math.ceil(total / take),
       },
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`Get all sheets error: ${error} | from sheetController`);
     res.status(500).json({ error: 'Failed to get sheets.' });
   }
@@ -129,26 +151,36 @@ export const getSheetById = async (req, res) => {
       return res.status(404).json({ error: 'Sheet not found.' });
     }
 
-    //เพิ่ม view count 
     prisma.sheet.update({
       where: { id },
       data: { viewCount: { increment: 1 } },
     }).catch(err => console.error('Update view count error:', err));
 
-    //สร้าง signed URL ไว้preview expire 1 ชม
-    const signedUrl = cloudinary.url(sheet.fileUrl, {
-      sign_url: true,
-      type: 'authenticated',
-      resource_type: 'raw',
-      secure: true,
-    });
+    const urlParts = sheet.fileUrl.split('/');
+    const uploadIndex = urlParts.indexOf('upload');
+    
+    let signedUrl = sheet.fileUrl; 
+    
+    if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+      const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+      const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
+      
+      signedUrl = cloudinary.url(publicId, {
+        resource_type: 'raw',
+        type: 'upload', 
+        secure: true,
+        sign_url: true,
+      });
+    }
 
     const { fileUrl, ...sheetData } = sheet;
 
     res.json({
       sheet: {
         ...sheetData,
-        previewUrl: signedUrl, //Frontend ใช้ URL นี้ขึ้น preview นะ
+        price: parseFloat(sheetData.price), 
+        averageRating: sheetData.averageRating ? parseFloat(sheetData.averageRating) : null, 
+        previewUrl: signedUrl, 
       },
     });
   } catch (error) {
@@ -174,7 +206,7 @@ export const createSheet = async (req, res) => {
       department: department?.trim() || null,
       university: university?.trim() || null,
       price: parseFloat(price),
-      fileUrl: req.file.path, 
+      fileUrl: req.file.path,
       sellerId: req.user.id,
     };
 
@@ -202,7 +234,7 @@ export const createSheet = async (req, res) => {
     });
   } catch (error) {
     console.error(`Create sheet error: ${error} | from sheetController`);
-    
+
     //ถ้าerrแล้ว PDF upload ไปแล้วจะลบออกจาก Cloudinary ก่อน
     if (req.file) {
       try {
@@ -222,7 +254,7 @@ export const createSheet = async (req, res) => {
   }
 };
 
-export const getMySheets = async (req , res) => {
+export const getMySheets = async (req, res) => {
   try {
     const { page = 1, limit = 20, isActive } = req.query;
 
@@ -262,7 +294,7 @@ export const getMySheets = async (req , res) => {
   }
 };
 
-export const updateSheet = async(req, res) => {
+export const updateSheet = async (req, res) => {
   try {
     const { id } = req.params;
     let { title, description, subject, year, faculty, department, university, price } = req.body;
@@ -324,7 +356,7 @@ export const updateSheet = async(req, res) => {
           const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.')) || publicIdWithExt;
           await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
         }
-      } 
+      }
       catch (deleteErr) {
         console.error('Delete old PDF error:', deleteErr);
       }
@@ -355,15 +387,15 @@ export const updateSheet = async(req, res) => {
       message: 'Sheet updated successfully.',
       sheet: updatedSheet,
     });
-  } 
-  
+  }
+
   catch (error) {
     console.error(`Update sheet error: ${error} | from sheetController`);
     res.status(500).json({ error: 'Failed to update sheet.' });
   }
 };
 
-export const deleteSheet = async(req, res) => {
+export const deleteSheet = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -388,8 +420,8 @@ export const deleteSheet = async(req, res) => {
     res.json({
       message: 'Sheet deleted successfully.',
     });
-  } 
-  
+  }
+
   catch (error) {
     console.error(`Delete sheet error: ${error} | from sheetController`);
     res.status(500).json({ error: 'Failed to delete sheet.' });
