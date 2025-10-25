@@ -81,3 +81,27 @@ export const rateSheet = async (req, res) => {
         res.status(500).json({ error: 'Failed to rate sheet.' });
     }
 };
+
+export const getMyReview = async (req, res) => {
+    try {
+        const { sheetId } = req.params;
+
+        const review = await prisma.review.findUnique({
+            where: {
+                userId_sheetId: {
+                    userId: req.user.id,
+                    sheetId,
+                },
+            },
+        });
+
+        res.json({
+            hasReviewed: !!review,
+            review: review || null,
+        });
+    }
+    catch (error) {
+        console.error(`Get my review error: ${error} | from reviewController`);
+        res.status(500).json({ error: 'Failed to get review.' });
+    }
+};
