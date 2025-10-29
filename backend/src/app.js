@@ -13,7 +13,9 @@ import reviewRoutes from './routes/review.route.js';
 
 import { stripeWebhook } from './controllers/purchase.controller.js';
 
-dotenv.config({ path: "../.env" });
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: "../.env" });
+}
 
 const PORT = process.env.PORT;
 
@@ -24,12 +26,32 @@ app.post('/api/purchases/webhook', express.raw({ type: 'application/json' }), st
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
+
+//CORS production
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.FRONTEND_URL] //Frontend URL จาก env
+  : ['http://localhost:3000', 'http://localhost:5173']; //Local
+
+
 app.use(
   cors({
-    origin: (process.env.DEV || "http://localhost:5000").split(","),
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
+
+//Health check 
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 //Routes
 app.use("/api/auth", authRoutes);
@@ -42,9 +64,10 @@ app.use("/api/reviews", reviewRoutes);
 
 
 //Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server run on PORT : ${PORT}`)
     console.log(`Protected cors use only : ${process.env.DEV}`)
+    console.log(`Environment: ${process.env.NODE_ENV}`);
 });
 
 
