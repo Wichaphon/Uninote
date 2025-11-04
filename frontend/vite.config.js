@@ -8,4 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'https://uninote-backend.onrender.com',
+        changeOrigin: true,
+      },
+    },
+  },
 });
