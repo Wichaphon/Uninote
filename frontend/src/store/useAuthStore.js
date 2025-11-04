@@ -1,256 +1,123 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axiosInstance from '../lib/axios';
-import { API_ENDPOINTS } from '../constants';
+import { authService } from '../services/authService';
+import { setAccessToken } from '../lib/axios';
+import { STORAGE_KEYS } from '../constants';
+import { handleError } from '../lib/utils';
 
 const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
-      accessToken: null,
-      isAuthenticated: false,
       isLoading: false,
       error: null,
+      isAuthenticated: false,
 
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
-      
-      setAccessToken: (token) => {
-        if (token) {
-          localStorage.setItem('accessToken', token);
-          axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
-        } else {
-          localStorage.removeItem('accessToken');
-          delete axiosInstance.defaults.headers.common.Authorization;
-        }
-        set({ accessToken: token });
-      },
-
-      setLoading: (isLoading) => set({ isLoading }),
-      
-      setError: (error) => set({ error }),
-
-      //Register
-      register: async (credentials) => {
+      register: async (userData) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await axiosInstance.post(
-            API_ENDPOINTS.AUTH.REGISTER,
-            credentials
-          );
-          
+          const data = await authService.register(userData);
           set({ isLoading: false });
-          return { success: true, data: response.data };
+          return { success: true, data };
         } catch (error) {
-          const errorMessage = error.response?.data?.error || error.response?.data?.errors || 'Registration failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
+          const errorMsg = handleError(error);
+          set({ isLoading: false, error: errorMsg });
+          return { success: false, error: errorMsg };
         }
       },
 
-      //Login
-      login: async (credentials) => {
+      login: async (email, password) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await axiosInstance.post(
-            API_ENDPOINTS.AUTH.LOGIN,
-            credentials
-          );
-          
-          const { user, accessToken } = response.data;
-          
-          //Set token
-          get().setAccessToken(accessToken);
-          
-          //Set user
-          set({ 
-            user, 
-            isAuthenticated: true, 
-            isLoading: false,
-            error: null 
-          });
-          
-          return { success: true, data: response.data };
+          const data = await authService.login(email, password);
+          setAccessToken(data.accessToken);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+          set({ user: data.user, isAuthenticated: true, isLoading: false });
+          return { success: true, data };
         } catch (error) {
-          const errorMessage = error.response?.data?.error || 'Login failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
+          const errorMsg = handleError(error);
+          set({ isLoading: false, error: errorMsg });
+          return { success: false, error: errorMsg };
         }
       },
 
-      //Logout
       logout: async () => {
+        set({ isLoading: true });
         try {
-          await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT);
+          await authService.logout();
         } catch (error) {
-          console.error('Logout error:', error);
+          console.error('Logout error:', handleError(error));
         } finally {
-          //Clear state on logout
-          get().setAccessToken(null);
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            error: null 
-          });
+          setAccessToken(null);
+          localStorage.removeItem(STORAGE_KEYS.USER);
+          set({ user: null, isAuthenticated: false, isLoading: false, error: null });
         }
       },
 
-      //Logout from all devices
-      logoutAll: async () => {
+      fetchProfile: async () => {
+        set({ isLoading: true, error: null });
         try {
-          await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT_ALL);
+          const data = await authService.getProfile();
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+          set({ user: data.user, isAuthenticated: true, isLoading: false });
         } catch (error) {
-          console.error('Logout all error:', error);
-        } finally {
-          get().setAccessToken(null);
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            error: null 
-          });
+          const errorMsg = handleError(error);
+          set({ isLoading: false, error: errorMsg });
+          await get().logout(); // Ensure logout is awaited
+          throw error;
         }
       },
 
-      //Fetch current user profile
-      fetchUser: async () => {
+      updateProfile: async (updates) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true });
-          
-          const response = await axiosInstance.get(API_ENDPOINTS.USER.ME);
-          
-          set({ 
-            user: response.data.user, 
-            isAuthenticated: true,
-            isLoading: false 
-          });
-          
-          return { success: true, data: response.data.user };
+          const data = await authService.updateProfile(updates);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+          set({ user: data.user, isLoading: false });
+          return { success: true, user: data.user };
         } catch (error) {
-          
-          //If fetch fails, clear auth state
-          get().setAccessToken(null);
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            isLoading: false 
-          });
-          return { success: false, error: error.message };
+          const errorMsg = handleError(error);
+          set({ isLoading: false, error: errorMsg });
+          return { success: false, error: errorMsg };
         }
       },
 
-      //Update user profile
-      updateProfile: async (data) => {
+      uploadAvatar: async (file) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
-          
-          const response = await axiosInstance.put(
-            API_ENDPOINTS.USER.UPDATE_PROFILE,
-            data
-          );
-          
-          set({ 
-            user: response.data.user,
-            isLoading: false 
-          });
-          
-          return { success: true, data: response.data };
-        } catch (error) {
-          const errorMessage = error.response?.data?.error || error.response?.data?.errors || 'Update failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
+          const data = await authService.uploadAvatar(file);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+          set({ user: data.user, isLoading: false });
+          return { success: true, user: data.user };
+        } 
+        catch (error) {
+          const errorMsg = handleError(error);
+          set({ isLoading: false, error: errorMsg });
+          return { success: false, error: errorMsg };
         }
       },
 
-      //Update avatar
-      updateAvatar: async (file) => {
+      checkAuthStatus: async () => {
+        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        if (!token) {
+          set({ isAuthenticated: false, user: null });
+          return;
+        }
+
         try {
-          set({ isLoading: true, error: null });
-          
-          const formData = new FormData();
-          formData.append('avatar', file);
-          
-          const response = await axiosInstance.put(
-            API_ENDPOINTS.USER.UPLOAD_AVATAR,
-            formData,
-          );
-          
-          set({ 
-            user: response.data.user,
-            isLoading: false 
-          });
-          
-          return { success: true, data: response.data };
+          await get().fetchProfile();
+          set({ isAuthenticated: true });
         } catch (error) {
-          const errorMessage = error.response?.data?.error || 'Upload failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
+          set({ isAuthenticated: false, user: null });
         }
       },
 
-      //Delete avatar
-      deleteAvatar: async () => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await axiosInstance.delete(
-            API_ENDPOINTS.USER.DELETE_AVATAR
-          );
-          
-          set({ 
-            user: response.data.user,
-            isLoading: false 
-          });
-          
-          return { success: true, data: response.data };
-        } catch (error) {
-          const errorMessage = error.response?.data?.error || 'Delete failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
-        }
-      },
-
-      //Change password
-      changePassword: async (data) => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await axiosInstance.put(
-            API_ENDPOINTS.USER.CHANGE_PASSWORD,
-            data
-          );
-          
-          //Logout after password change
-          get().setAccessToken(null);
-          set({ 
-            user: null,
-            isAuthenticated: false,
-            isLoading: false 
-          });
-          
-          return { success: true, data: response.data };
-        } catch (error) {
-          const errorMessage = error.response?.data?.error || 'Change password failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
-        }
-      },
-
-      //Initialize auth on app load
-      initAuth: async () => {
-        const token = localStorage.getItem('accessToken');
-        
-        if (token) {
-          get().setAccessToken(token);
-          await get().fetchUser();
-        }
-      },
+      clearError: () => set({ error: null }),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        user: state.user,
-        isAuthenticated: state.isAuthenticated 
+      partialize: (state) => ({
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )
