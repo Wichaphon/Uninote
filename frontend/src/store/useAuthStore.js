@@ -19,7 +19,8 @@ const useAuthStore = create(
           const data = await authService.register(userData);
           set({ isLoading: false });
           return { success: true, data };
-        } catch (error) {
+        } 
+        catch (error) {
           const errorMsg = handleError(error);
           set({ isLoading: false, error: errorMsg });
           return { success: false, error: errorMsg };
@@ -34,7 +35,8 @@ const useAuthStore = create(
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
           set({ user: data.user, isAuthenticated: true, isLoading: false });
           return { success: true, data };
-        } catch (error) {
+        } 
+        catch (error) {
           const errorMsg = handleError(error);
           set({ isLoading: false, error: errorMsg });
           return { success: false, error: errorMsg };
@@ -45,9 +47,11 @@ const useAuthStore = create(
         set({ isLoading: true });
         try {
           await authService.logout();
-        } catch (error) {
+        } 
+        catch (error) {
           console.error('Logout error:', handleError(error));
-        } finally {
+        } 
+        finally {
           setAccessToken(null);
           localStorage.removeItem(STORAGE_KEYS.USER);
           set({ user: null, isAuthenticated: false, isLoading: false, error: null });
@@ -60,10 +64,11 @@ const useAuthStore = create(
           const data = await authService.getProfile();
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
           set({ user: data.user, isAuthenticated: true, isLoading: false });
-        } catch (error) {
+        } 
+        catch (error) {
           const errorMsg = handleError(error);
           set({ isLoading: false, error: errorMsg });
-          await get().logout(); // Ensure logout is awaited
+          await get().logout(); 
           throw error;
         }
       },
@@ -75,7 +80,8 @@ const useAuthStore = create(
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
           set({ user: data.user, isLoading: false });
           return { success: true, user: data.user };
-        } catch (error) {
+        } 
+        catch (error) {
           const errorMsg = handleError(error);
           set({ isLoading: false, error: errorMsg });
           return { success: false, error: errorMsg };
