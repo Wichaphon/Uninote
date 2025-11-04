@@ -28,24 +28,25 @@ app.use(cookieParser());
 app.use(express.json());
 
 //CORS production
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [process.env.FRONTEND_URL] //Frontend URL จาก env
-  : ['http://localhost:3000', 'http://localhost:5173']; //Local
-
+const allowedOrigins = [
+  process.env.FRONTEND_URL, 
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  })
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); 
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
 );
 
 //Health check 
@@ -66,7 +67,7 @@ app.use("/api/reviews", reviewRoutes);
 //Start server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server run on PORT : ${PORT}`)
-    console.log(`Protected cors use only : ${process.env.DEV}`)
+    console.log(`Protected cors use only : ${allowedOrigins.join(', ')}`)
     console.log(`Environment: ${process.env.NODE_ENV}`);
 });
 
