@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
@@ -67,6 +68,12 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 
 app.use('/pdfs', express.static('public/pdfs', { acceptRanges: true }));
+
+app.use(express.static(path.join(__dirname, '../../frontend/public')));
+app.get('/pdf.worker.min.js', (req, res) => {
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, '../../frontend/public/pdf.worker.min.js'));
+});
 
 //Start server
 app.listen(PORT, '0.0.0.0', () => {
