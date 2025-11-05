@@ -1,86 +1,77 @@
 import { create } from 'zustand';
 import { purchaseService } from '../services/purchaseService';
 
-const usePurchaseStore = create((set, get) => ({
+const usePurchaseStore = create((set) => ({
   purchases: [],
   sales: [],
-  pagination: null,
   isLoading: false,
   error: null,
 
-  //Create purchase 
+  fetchMyPurchases: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await purchaseService.getMyPurchases();
+      set({ purchases: data.purchases, isLoading: false });
+    } catch (error) {
+      set({ 
+        isLoading: false, 
+        error: error.response?.data?.error || 'Failed to fetch purchases' 
+      });
+    }
+  },
+
+  fetchMySales: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await purchaseService.getMySales();
+      set({ sales: data.sales, isLoading: false });
+    } catch (error) {
+      set({ 
+        isLoading: false, 
+        error: error.response?.data?.error || 'Failed to fetch sales' 
+      });
+    }
+  },
+
   createPurchase: async (sheetId) => {
     set({ isLoading: true, error: null });
     try {
       const data = await purchaseService.createPurchase(sheetId);
       set({ isLoading: false });
-      //Redirect to Stripe Checkout
-      window.location.href = data.checkoutUrl;
+      //Redirect to Stripe
+      if (data.url) {
+        window.location.href = data.url;
+      }
       return data;
     } catch (error) {
-      set({ isLoading: false, error: error.response?.data?.error });
+      set({ 
+        isLoading: false, 
+        error: error.response?.data?.error || 'Failed to create purchase' 
+      });
       throw error;
     }
   },
 
-  //Fetch my purchases
-  fetchMyPurchases: async (params = {}) => {
-    set({ isLoading: true, error: null });
-    try {
-      const data = await purchaseService.getMyPurchases(params);
-      set({ 
-        purchases: data.purchases, 
-        pagination: data.pagination,
-        isLoading: false 
-      });
-    } 
-    catch (error) {
-      set({ isLoading: false, error: error.response?.data?.error });
-    }
-  },
-
-  //Check if purchased
   checkPurchase: async (sheetId) => {
     try {
       const data = await purchaseService.checkPurchase(sheetId);
       return data;
-    } 
-    catch (error) {
-      return { purchased: false };
-    }
-  },
-
-  //Download sheet
-  downloadSheet: async (sheetId) => {
-    set({ isLoading: true, error: null });
-    try {
-      const data = await purchaseService.downloadSheet(sheetId);
-      set({ isLoading: false });
-      //Open download URL
-      window.open(data.downloadUrl, '_blank');
-      return data;
     } catch (error) {
-      set({ isLoading: false, error: error.response?.data?.error });
       throw error;
     }
   },
 
-  //seller
-  fetchMySales: async (params = {}) => {
-    set({ isLoading: true, error: null });
+  //Download Sheet
+  downloadSheet: async (sheetId) => {
+    set({ error: null });
     try {
-      const data = await purchaseService.getMySales(params);
-      set({ 
-        sales: data.sales, 
-        pagination: data.pagination,
-        isLoading: false 
-      });
+      const data = await purchaseService.downloadSheet(sheetId);
+      return data;
     } catch (error) {
-      set({ isLoading: false, error: error.response?.data?.error });
+      set({ error: error.response?.data?.error || 'Download failed' });
+      throw error;
     }
   },
-
-  clearError: () => set({ error: null }),
 }));
 
 export default usePurchaseStore;

@@ -71,19 +71,27 @@ const useSheetStore = create((set, get) => ({
     }
   },
 
-  //Update sheet
   updateSheet: async (id, formData) => {
     set({ isLoading: true, error: null });
     try {
       const data = await sheetService.updateSheet(id, formData);
-      set({ isLoading: false });
-      return data;
+      
+      set({ currentSheet: data.sheet, isLoading: false });
+      
+      const mySheets = get().mySheets;
+      const updatedMySheets = mySheets.map(sheet => 
+        sheet.id === id ? data.sheet : sheet
+      );
+      set({ mySheets: updatedMySheets });
+      
+      return data.sheet;
     } catch (error) {
       set({ isLoading: false, error: error.response?.data?.error });
       throw error;
     }
   },
 
+  clearError: () => set({ error: null }),
   //Delete sheet
   deleteSheet: async (id) => {
     set({ isLoading: true, error: null });
@@ -96,11 +104,9 @@ const useSheetStore = create((set, get) => ({
       throw error;
     }
   },
-
   setFilters: (newFilters) => {
     set({ filters: { ...get().filters, ...newFilters } });
   },
-
   clearError: () => set({ error: null }),
 }));
 

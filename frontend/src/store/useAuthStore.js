@@ -1,28 +1,26 @@
 import { create } from 'zustand';
-import api, { setAccessToken, getAccessToken } from '../lib/axios';
+import api, { setAccessToken } from '../lib/axios';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../constants';
-import axios from '../lib/axios';
 
 const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER)) || null,
   isLoading: false,
-  isAuthChecking: true, 
+  isAuthChecking: true,
   error: null,
 
+  //Initialize auth
   initializeAuth: async () => {
     set({ isAuthChecking: true });
-    
+
     const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
     const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
 
     if (storedUser && storedToken) {
       try {
-        //Verify token 
         const { data } = await api.get(API_ENDPOINTS.ME);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
         set({ user: data.user, isAuthChecking: false });
       } catch (error) {
-        //Token invalid
         console.error('Token verification failed:', error);
         localStorage.removeItem(STORAGE_KEYS.USER);
         localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -53,14 +51,13 @@ const useAuthStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data } = await api.post(API_ENDPOINTS.LOGIN, { email, password });
-      
+
       setAccessToken(data.accessToken);
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-      
+
       set({ user: data.user, isLoading: false });
       return data;
-    } 
-    catch (error) {
+    } catch (error) {
       const errorMsg = error.response?.data?.error || 'Login failed';
       set({ isLoading: false, error: errorMsg });
       throw error;
@@ -81,18 +78,16 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  //Get Profile
+  //Get Profile 
   fetchProfile: async () => {
     set({ isLoading: true, error: null });
     try {
-      const token = localStorage.getItem('accessToken'); // ดึง Token จาก localStorage
-      if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // เพิ่ม Header Authorization
-      }
-      const response = await axios.get('/users/me');
-      set({ user: response.data });
+      const { data } = await api.get(API_ENDPOINTS.ME);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+      set({ user: data.user, isLoading: false });
+      return data.user;
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      set({ isLoading: false, error: error.response?.data?.error });
       throw error;
     }
   },
