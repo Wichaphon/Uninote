@@ -64,7 +64,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#f9f9f9]">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-10">
         <h2 className="text-4xl font-bold text-center text-[#646cff] mb-8">
           Login
