@@ -171,6 +171,7 @@ export const getMyPurchases = async (req, res) => {
                                     id: true,
                                     firstName: true,
                                     lastName: true,
+                                    avatar: true,
                                     sellerProfile: {
                                         select: {
                                             shopName: true,
