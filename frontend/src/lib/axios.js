@@ -16,9 +16,11 @@ export const setAccessToken = (token) => {
   accessToken = token;
   if (token) {
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } 
 else {
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    delete api.defaults.headers.common['Authorization'];
   }
 };
 

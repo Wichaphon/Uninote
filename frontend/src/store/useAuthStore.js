@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api, { setAccessToken, getAccessToken } from '../lib/axios';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../constants';
+import axios from '../lib/axios';
 
 const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER)) || null,
@@ -84,12 +85,14 @@ const useAuthStore = create((set, get) => ({
   fetchProfile: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.get(API_ENDPOINTS.ME);
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-      set({ user: data.user, isLoading: false });
-      return data.user;
+      const token = localStorage.getItem('accessToken'); // ดึง Token จาก localStorage
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // เพิ่ม Header Authorization
+      }
+      const response = await axios.get('/users/me');
+      set({ user: response.data });
     } catch (error) {
-      set({ isLoading: false, error: error.response?.data?.error });
+      console.error('Failed to fetch profile:', error);
       throw error;
     }
   },
