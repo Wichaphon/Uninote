@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import { fileURLToPath } from 'url'; 
 
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
@@ -13,9 +14,11 @@ import adminRoutes from './routes/admin.route.js';
 import reviewRoutes from './routes/review.route.js';
 
 import { stripeWebhook } from './controllers/purchase.controller.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: "../.env" });
+  dotenv.config({ path: path.join(__dirname, "../.env") }); 
 }
 
 const PORT = process.env.PORT;
@@ -30,32 +33,32 @@ app.use(express.json());
 
 // CORS production
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:5173',
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:5173',
 ];
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
-    allowedHeaders: ['Content-Type', 'Authorization', 'Range'], 
-    exposedHeaders: ['Content-Range', 'Accept-Ranges'], 
-    credentials: true,
-  })
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+    allowedHeaders: ['Content-Type', 'Authorization', 'Range'], 
+    exposedHeaders: ['Content-Range', 'Accept-Ranges'], 
+    credentials: true,
+  })
 );
 
 //Health check 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 //Routes
@@ -67,19 +70,18 @@ app.use("/api/purchases", purchaseRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 
-app.use('/pdfs', express.static('public/pdfs', { acceptRanges: true }));
+// Use corrected __dirname
+app.use('/pdfs', express.static(path.join(__dirname, 'public/pdfs'), { acceptRanges: true }));
 
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
 app.get('/pdf.worker.min.js', (req, res) => {
-  res.type('application/javascript');
-  res.sendFile(path.join(__dirname, '../../frontend/public/pdf.worker.min.js'));
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, '../../frontend/public/pdf.worker.min.js'));
 });
 
 //Start server
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server run on PORT : ${PORT}`)
-    console.log(`Protected cors use only : ${allowedOrigins.join(', ')}`)
-    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Server run on PORT : ${PORT}`)
+    console.log(`Protected cors use only : ${allowedOrigins.join(', ')}`)
+    console.log(`Environment: ${process.env.NODE_ENV}`);
 });
-
-
