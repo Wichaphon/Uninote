@@ -7,6 +7,7 @@ export const API_BASE_URL = IS_DEV
 //Routes
 export const ROUTES = {
   HOME: '/',
+  EXPLORE: '/explore',
   LOGIN: '/login',
   SIGNUP: '/signup',
   PROFILE: '/profile',
