@@ -1,20 +1,22 @@
 export const formatPrice = (price) => {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-  }).format(price);
+  if (!price && price !== 0) return '฿0.00';
+  return `฿${parseFloat(price).toFixed(2)}`;
 };
 
 export const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('th-TH', {
+  if (!date) return 'N/A';
+  return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
   });
 };
 
 export const formatRating = (rating) => {
-  return rating ? rating.toFixed(1) : 'N/A';
+  if (rating === null || rating === undefined || isNaN(rating)) {
+    return '0.0';
+  }
+  return parseFloat(rating).toFixed(1);
 };
 
 export const handleError = (error) => {
@@ -43,6 +45,12 @@ export const handleError = (error) => {
   } else {
     return error.message || 'An unknown error occurred';
   }
+};
+
+//Truncate text
+export const truncate = (text, length = 100) => {
+  if (!text) return '';
+  return text.length > length ? `${text.substring(0, length)}...` : text;
 };
 
 export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
