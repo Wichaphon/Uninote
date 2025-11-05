@@ -71,7 +71,6 @@ function SignUpPage() {
       password: !!errors.password,
     });
 
-    // reset การสั่นหลัง 500ms ทุกครั้ง เพื่อให้สั่นได้รอบต่อไป
     setTimeout(() => {
       setShakeFields({
         firstName: false,
@@ -115,7 +114,7 @@ function SignUpPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* First Name */}
+          {/*First Name*/}
           <div>
             <div
               className={`flex items-center border rounded-lg px-4 py-3 transition ${
@@ -140,7 +139,7 @@ function SignUpPage() {
             )}
           </div>
 
-          {/* Last Name */}
+          {/*Last Name*/}
           <div>
             <div
               className={`flex items-center border rounded-lg px-4 py-3 transition ${
@@ -165,7 +164,7 @@ function SignUpPage() {
             )}
           </div>
 
-          {/* Email */}
+          {/*Email*/}
           <div>
             <div
               className={`flex items-center border rounded-lg px-4 py-3 transition ${
@@ -190,7 +189,7 @@ function SignUpPage() {
             )}
           </div>
 
-          {/* Password */}
+          {/*Password*/}
           <div>
             <div
               className={`flex items-center border rounded-lg px-4 py-3 transition ${
@@ -222,7 +221,7 @@ function SignUpPage() {
             )}
           </div>
 
-          {/* Submit */}
+          {/*Submit*/}
           <button
             type="submit"
             disabled={isLoading}
