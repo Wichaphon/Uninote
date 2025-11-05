@@ -1,132 +1,149 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { authService } from '../services/authService';
-import { setAccessToken } from '../lib/axios';
-import { STORAGE_KEYS } from '../constants';
-import { handleError } from '../lib/utils';
+import api, { setAccessToken, getAccessToken } from '../lib/axios';
+import { API_ENDPOINTS, STORAGE_KEYS } from '../constants';
 
-const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      user: null,
-      isLoading: false,
-      error: null,
-      isAuthenticated: false,
+const useAuthStore = create((set, get) => ({
+  user: JSON.parse(localStorage.getItem(STORAGE_KEYS.USER)) || null,
+  isLoading: false,
+  isAuthChecking: true, 
+  error: null,
 
-      register: async (userData) => {
-        set({ isLoading: true, error: null });
-        try {
-          const data = await authService.register(userData);
-          set({ isLoading: false });
-          return { success: true, data };
-        } 
-        catch (error) {
-          const errorMsg = handleError(error);
-          set({ isLoading: false, error: errorMsg });
-          return { success: false, error: errorMsg };
-        }
-      },
+  initializeAuth: async () => {
+    set({ isAuthChecking: true });
+    
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+    const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
 
-      login: async (email, password) => {
-        set({ isLoading: true, error: null });
-        try {
-          const data = await authService.login(email, password);
-          setAccessToken(data.accessToken);
-          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-          set({ user: data.user, isAuthenticated: true, isLoading: false });
-          return { success: true, data };
-        } 
-        catch (error) {
-          const errorMsg = handleError(error);
-          set({ isLoading: false, error: errorMsg });
-          return { success: false, error: errorMsg };
-        }
-      },
-
-      logout: async () => {
-        set({ isLoading: true });
-        try {
-          await authService.logout();
-        } 
-        catch (error) {
-          console.error('Logout error:', handleError(error));
-        } 
-        finally {
-          setAccessToken(null);
-          localStorage.removeItem(STORAGE_KEYS.USER);
-          set({ user: null, isAuthenticated: false, isLoading: false, error: null });
-        }
-      },
-
-      fetchProfile: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const data = await authService.getProfile();
-          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-          set({ user: data.user, isAuthenticated: true, isLoading: false });
-        } 
-        catch (error) {
-          const errorMsg = handleError(error);
-          set({ isLoading: false, error: errorMsg });
-          await get().logout(); 
-          throw error;
-        }
-      },
-
-      updateProfile: async (updates) => {
-        set({ isLoading: true, error: null });
-        try {
-          const data = await authService.updateProfile(updates);
-          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-          set({ user: data.user, isLoading: false });
-          return { success: true, user: data.user };
-        } 
-        catch (error) {
-          const errorMsg = handleError(error);
-          set({ isLoading: false, error: errorMsg });
-          return { success: false, error: errorMsg };
-        }
-      },
-
-      uploadAvatar: async (file) => {
-        set({ isLoading: true, error: null });
-        try {
-          const data = await authService.uploadAvatar(file);
-          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-          set({ user: data.user, isLoading: false });
-          return { success: true, user: data.user };
-        } 
-        catch (error) {
-          const errorMsg = handleError(error);
-          set({ isLoading: false, error: errorMsg });
-          return { success: false, error: errorMsg };
-        }
-      },
-
-      checkAuthStatus: async () => {
-        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-        if (!token) {
-          set({ isAuthenticated: false, user: null });
-          return;
-        }
-
-        try {
-          await get().fetchProfile();
-          set({ isAuthenticated: true });
-        } catch (error) {
-          set({ isAuthenticated: false, user: null });
-        }
-      },
-
-      clearError: () => set({ error: null }),
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        isAuthenticated: state.isAuthenticated,
-      }),
+    if (storedUser && storedToken) {
+      try {
+        //Verify token 
+        const { data } = await api.get(API_ENDPOINTS.ME);
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+        set({ user: data.user, isAuthChecking: false });
+      } catch (error) {
+        //Token invalid
+        console.error('Token verification failed:', error);
+        localStorage.removeItem(STORAGE_KEYS.USER);
+        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        setAccessToken(null);
+        set({ user: null, isAuthChecking: false });
+      }
+    } else {
+      set({ isAuthChecking: false });
     }
-  )
-);
+  },
+
+  //Register
+  register: async (userData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.post(API_ENDPOINTS.REGISTER, userData);
+      set({ isLoading: false });
+      return data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Registration failed';
+      set({ isLoading: false, error: errorMsg });
+      throw error;
+    }
+  },
+
+  //Login
+  login: async (email, password) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.post(API_ENDPOINTS.LOGIN, { email, password });
+      
+      setAccessToken(data.accessToken);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+      
+      set({ user: data.user, isLoading: false });
+      return data;
+    } 
+    catch (error) {
+      const errorMsg = error.response?.data?.error || 'Login failed';
+      set({ isLoading: false, error: errorMsg });
+      throw error;
+    }
+  },
+
+  //Logout
+  logout: async () => {
+    set({ isLoading: true });
+    try {
+      await api.post(API_ENDPOINTS.LOGOUT);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setAccessToken(null);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      set({ user: null, isLoading: false });
+    }
+  },
+
+  //Get Profile
+  fetchProfile: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.get(API_ENDPOINTS.ME);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+      set({ user: data.user, isLoading: false });
+      return data.user;
+    } catch (error) {
+      set({ isLoading: false, error: error.response?.data?.error });
+      throw error;
+    }
+  },
+
+  //Update Profile
+  updateProfile: async (updates) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.put(API_ENDPOINTS.UPDATE_PROFILE, updates);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+      set({ user: data.user, isLoading: false });
+      return data.user;
+    } catch (error) {
+      set({ isLoading: false, error: error.response?.data?.error });
+      throw error;
+    }
+  },
+
+  //Upload Avatar
+  uploadAvatar: async (file) => {
+    set({ isLoading: true, error: null });
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const { data } = await api.put(API_ENDPOINTS.UPLOAD_AVATAR, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+      set({ user: data.user, isLoading: false });
+      return data.user;
+    } catch (error) {
+      set({ isLoading: false, error: error.response?.data?.error });
+      throw error;
+    }
+  },
+
+  //Delete Avatar
+  deleteAvatar: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.delete(API_ENDPOINTS.DELETE_AVATAR);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+      set({ user: data.user, isLoading: false });
+      return data.user;
+    } catch (error) {
+      set({ isLoading: false, error: error.response?.data?.error });
+      throw error;
+    }
+  },
+
+  //Clear Error
+  clearError: () => set({ error: null }),
+}));
 
 export default useAuthStore;
