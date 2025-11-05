@@ -43,15 +43,27 @@ function Navbar() {
 
   const isActive = (path) => location.pathname.startsWith(path);
 
+  const handleLogoClick = () => {
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <nav className="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6 flex-1 min-w-0">
           <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-2xl font-semibold text-indigo-600 hover:opacity-90 transition cursor-pointer flex-shrink-0"
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 text-2xl font-semibold text-indigo-600 hover:opacity-90 transition cursor-pointer flex-shrink-0 group"
           >
-            <img src="/box-svgrepo-com.svg" alt="logo" className="w-8 h-8" />
+            <img
+              src="/box-svgrepo-com.svg"
+              alt="logo"
+              className="w-8 h-8 transition-transform duration-300 ease-in-out group-hover:rotate-360"
+            />
             <span className="hidden sm:block">UniNote</span>
           </button>
 
@@ -168,7 +180,7 @@ function Navbar() {
 
                 {showDropdown && (
                   <div className="absolute right-0 mt-3 w-60 bg-white/95 backdrop-blur-md border border-gray-200 rounded-xl shadow-xl overflow-hidden animate-fade-in">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-indigo-50 rounded-t-xl">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-indigo-50 rounded-t-xl">
                       <p className="font-semibold text-gray-800">
                         {user.firstName} {user.lastName}
                       </p>
@@ -194,7 +206,24 @@ function Navbar() {
                       </button>
                     </div>
 
-                    <div className="border-t border-gray-100">
+                    {(user.role === "SELLER" || user.role === "ADMIN") && (
+                      <div className="border-t border-gray-200">
+                        <button
+                          onClick={() => handleNavigate("/seller")}
+                          className="block w-full px-4 py-3 text-sm text-left text-gray-700 font-medium hover:bg-gray-100 hover:text-gray-800 transition-colors cursor-pointer"
+                        >
+                          Dashboard
+                        </button>
+                        <button
+                          onClick={() => handleNavigate("/seller/profile")}
+                          className="block w-full px-4 py-3 text-sm text-left text-gray-700 font-medium hover:bg-gray-100 hover:text-gray-800 transition-colors cursor-pointer"
+                        >
+                          Shop Settings
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="border-t border-gray-200">
                       <button
                         onClick={handleLogout}
                         className="block w-full px-4 py-3 text-sm text-left text-red-600 font-medium hover:bg-red-100 transition-colors cursor-pointer"
