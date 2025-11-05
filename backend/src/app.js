@@ -27,26 +27,29 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
 
-//CORS production
+// CORS production
 const allowedOrigins = [
-  process.env.FRONTEND_URL, 
-  'http://localhost:3000',
-  'http://localhost:5173'
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:5173',
 ];
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); 
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  })
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+    allowedHeaders: ['Content-Type', 'Authorization', 'Range'], 
+    exposedHeaders: ['Content-Range', 'Accept-Ranges'], 
+    credentials: true,
+  })
 );
 
 //Health check 
@@ -63,6 +66,7 @@ app.use("/api/purchases", purchaseRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reviews", reviewRoutes);
 
+app.use('/pdfs', express.static('public/pdfs', { acceptRanges: true }));
 
 //Start server
 app.listen(PORT, '0.0.0.0', () => {
