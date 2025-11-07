@@ -14,7 +14,7 @@ export const ROUTES = {
   SETTINGS: '/settings',
   SHEETS: '/sheets',
   SHEET_DETAIL: '/sheets/:id',
-  MY_PURCHASES: '/purchases',
+  MY_PURCHASES: '/purchases/my/purchases',
   MY_SHEETS: '/my-sheets',
   ADMIN: '/admin',
 };
