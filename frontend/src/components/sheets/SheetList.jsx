@@ -3,9 +3,18 @@ import SheetThumbnail from './SheetThumbnail';
 import StarRating from './StarRating';
 import { formatPrice } from '../../lib/utils';
 import { EyeIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 function SheetCard({ sheet }) {
   const navigate = useNavigate();
+
+  if (!sheet) {
+    return (
+      <div className="bg-gray-100 border border-gray-200 rounded-md p-4 text-gray-500 text-sm">
+        Missing sheet data
+      </div>
+    );
+  }
 
   return (
     <div
@@ -58,7 +67,15 @@ function SheetCard({ sheet }) {
   );
 }
 
-function SheetList({ sheets = [], ...props }) {
+function SheetList({ sheets = [], isLoading = false, ...props }) {
+  if (isLoading) {
+    return (
+      <div className="py-24">
+        <LoadingSpinner text="Loading sheets..." />
+      </div>
+    );
+  }
+
   const safeSheets = Array.isArray(sheets) ? sheets.filter(Boolean) : [];
 
   if (Array.isArray(sheets) && safeSheets.length !== sheets.length) {
