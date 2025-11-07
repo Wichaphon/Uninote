@@ -21,7 +21,7 @@ function HomePage() {
   useEffect(() => {
     fetchSheets({
       page: 1,
-      limit: 3,
+      limit: 4,
       sortBy: "purchaseCount",
       order: "desc",
     });
@@ -159,21 +159,16 @@ function HomePage() {
             </div>
           ) : (
             <motion.div
-              className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
               variants={cardListVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
-              style={{
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}
             >
-              {sheets.slice(0, 3).map((sheet) => (
+              {sheets.slice(0, 4).map((sheet) => (
                 <motion.div 
                   variants={cardVariants} 
                   key={sheet.id}
-                  className="shrink-0 w-80 snap-start"
                 >
                   <SheetCard sheet={sheet} />
                 </motion.div>
