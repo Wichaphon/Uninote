@@ -199,7 +199,7 @@ function BecomeSellerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-indigo-50 py-12 px-4">
+    <div className="min-h-screen bg-linear-to-br from-white to-indigo-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <motion.div
           className="text-center mb-10"
@@ -208,7 +208,7 @@ function BecomeSellerPage() {
           animate="visible"
         >
           <motion.h1
-            className="text-5xl font-bold mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+            className="text-5xl font-bold mb-6 bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
             variants={itemVariants}
           >
             Become a Seller
@@ -427,7 +427,7 @@ function PendingApplicationView({ sellerProfile }) {
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-400 p-6 text-white">
+          <div className="bg-linear-to-r from-yellow-400 to-orange-400 p-6 text-white">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                 <ClockIcon className="w-8 h-8 text-white" />
@@ -444,7 +444,7 @@ function PendingApplicationView({ sellerProfile }) {
           <div className="p-6 space-y-6">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <InformationCircleIcon className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <InformationCircleIcon className="w-6 h-6 text-yellow-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-yellow-800 mb-1">
                     What happens next?
@@ -599,7 +599,7 @@ function RejectedApplicationView({ sellerProfile }) {
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-red-500 to-pink-500 p-6 text-white">
+          <div className="bg-linear-to-r from-red-500 to-pink-500 p-6 text-white">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                 <XCircleIcon className="w-8 h-8 text-white" />
@@ -618,7 +618,7 @@ function RejectedApplicationView({ sellerProfile }) {
           <div className="p-6 space-y-6">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <ExclamationTriangleIcon className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-red-800 mb-2">
                     Why was my application rejected?
@@ -640,7 +640,7 @@ function RejectedApplicationView({ sellerProfile }) {
 
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <LightBulbIcon className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-0.5" />
+                <LightBulbIcon className="w-6 h-6 text-indigo-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-indigo-800 mb-2">
                     What should I do next?
@@ -774,7 +774,7 @@ function RejectedApplicationView({ sellerProfile }) {
               </ol>
             </div>
 
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-6 text-white text-center">
+            <div className="bg-linear-to-r from-indigo-600 to-purple-600 rounded-lg p-6 text-white text-center">
               <h3 className="text-xl font-bold mb-2">Need to Reapply?</h3>
               <p className="text-indigo-100 mb-4">
                 Contact our support team to discuss your application and

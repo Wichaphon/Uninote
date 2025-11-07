@@ -5,10 +5,9 @@ import usePurchaseStore from '../store/usePurchaseStore';
 import useAuthStore from '../store/useAuthStore';
 import { sellerService } from '../services/sellerService';
 import { formatPrice, formatDate } from '../lib/utils';
-import CreateSheetForm from '../components/seller/CreateSheetForm';
 import MySheetsList from '../components/seller/MySheetsList';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion'; 
 import { 
   Cog6ToothIcon, 
   PlusIcon, 
@@ -16,7 +15,6 @@ import {
   ClockIcon, 
   DocumentPlusIcon,
   RocketLaunchIcon,
-  XMarkIcon,
   BanknotesIcon,
   ShoppingCartIcon,
   DocumentDuplicateIcon,
@@ -128,7 +126,7 @@ function SellerDashboard() {
   const { sales, fetchMySales } = usePurchaseStore();
 
   const [sellerProfile, setSellerProfile] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  // ❌ ลบ showCreateForm
   
   const [viewMode, setViewMode] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -154,7 +152,7 @@ function SellerDashboard() {
     if (!confirm('Are you sure you want to delete this sheet?')) return;
     try {
       await deleteSheet(sheetId);
-      alert('Sheet deleted successfully');
+      // (ผมลบ alert ออกให้ครับ)
     } catch (err) {
       alert('Delete failed: ' + err.message);
     }
@@ -266,7 +264,7 @@ function SellerDashboard() {
               Shop Settings
             </button>
             <button
-              onClick={() => setShowCreateForm(true)}
+              onClick={() => navigate('/seller/sheets/create')}
               className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 font-medium shadow-lg shadow-indigo-500/30 cursor-pointer"
             >
               <PlusIcon className="w-5 h-5" />
@@ -552,45 +550,13 @@ function SellerDashboard() {
               Start by creating your first study sheet to sell
             </p>
             <button
-              onClick={() => setShowCreateForm(true)}
+              onClick={() => navigate('/seller/sheets/create')}
               className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold cursor-pointer shadow-lg shadow-indigo-500/30"
             >
               Create Your First Sheet
             </button>
           </div>
         )}
-
-        <AnimatePresence>
-          {showCreateForm && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <motion.div 
-                className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-              >
-                <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-                  <h2 className="text-2xl font-bold text-gray-900">Create New Sheet</h2>
-                  <button
-                    onClick={() => setShowCreateForm(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <XMarkIcon className="w-6 h-6" />
-                  </button>
-                </div>
-                <div className="p-6">
-                  <CreateSheetForm
-                    onClose={() => setShowCreateForm(false)}
-                    onSuccess={() => {
-                      fetchMySheets();
-                      setShowCreateForm(false);
-                    }}
-                  />
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
