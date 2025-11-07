@@ -66,8 +66,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section - Clean Gradient */}
-      <section className="py-24 sm:py-32 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700">
+      <section className="py-24 sm:py-32 bg-linear-to-br from-blue-500 via-indigo-600 to-purple-700">
         <motion.div
           className="container mx-auto px-4 text-center"
           variants={containerVariants}
@@ -118,7 +117,6 @@ function HomePage() {
         </motion.div>
       </section>
 
-      {/* Popular Sheets Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
@@ -161,14 +159,22 @@ function HomePage() {
             </div>
           ) : (
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
               variants={cardListVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
             >
               {sheets.slice(0, 3).map((sheet) => (
-                <motion.div variants={cardVariants} key={sheet.id}>
+                <motion.div 
+                  variants={cardVariants} 
+                  key={sheet.id}
+                  className="shrink-0 w-80 snap-start"
+                >
                   <SheetCard sheet={sheet} />
                 </motion.div>
               ))}
@@ -177,8 +183,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* How It Works Section - Clean Gradient */}
-      <section className="py-16 bg-gradient-to-br from-violet-400 via-purple-500 to-fuchsia-600">
+      <section className="py-16 bg-linear-to-br from-violet-400 via-purple-500 to-fuchsia-600">
         <div className="container mx-auto px-4">
           <motion.h2
             className="text-3xl font-bold mb-12 text-center text-white drop-shadow-lg"
@@ -227,8 +232,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Share Your Knowledge Section - Original Style */}
-      <section className="py-16 bg-gradient-to-br from-gray-800 to-indigo-950">
+      <section className="py-16 bg-linear-to-br from-gray-800 to-indigo-950">
         <motion.div
           className="container mx-auto px-4 text-center"
           initial={{ opacity: 0, y: 20 }}
