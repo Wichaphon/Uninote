@@ -52,6 +52,7 @@ export const API_ENDPOINTS = {
   DELETE_SHEET: (id) => `/sheets/${id}`,
   
   //Purchases
+  PURCHASES: '/purchases',
   CREATE_PURCHASE: (id) => `/purchases/${id}`,
   MY_PURCHASES: '/purchases/my/purchases',
   CHECK_PURCHASE: (id) => `/purchases/check/${id}`,

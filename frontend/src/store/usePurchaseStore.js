@@ -11,11 +11,12 @@ const usePurchaseStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await purchaseService.getMyPurchases();
-      set({ purchases: data.purchases, isLoading: false });
+      set({ purchases: data.purchases || [], isLoading: false });
     } catch (error) {
       set({ 
         isLoading: false, 
-        error: error.response?.data?.error || 'Failed to fetch purchases' 
+        error: error.response?.data?.error || 'Failed to fetch purchases',
+        purchases: []
       });
     }
   },
@@ -24,11 +25,12 @@ const usePurchaseStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const data = await purchaseService.getMySales();
-      set({ sales: data.sales, isLoading: false });
+      set({ sales: data.sales || [], isLoading: false });
     } catch (error) {
       set({ 
         isLoading: false, 
-        error: error.response?.data?.error || 'Failed to fetch sales' 
+        error: error.response?.data?.error || 'Failed to fetch sales',
+        sales: []
       });
     }
   },
@@ -38,10 +40,11 @@ const usePurchaseStore = create((set) => ({
     try {
       const data = await purchaseService.createPurchase(sheetId);
       set({ isLoading: false });
-      //Redirect to Stripe
-      if (data.url) {
-        window.location.href = data.url;
+      
+      if (data.checkoutUrl) { 
+        window.location.href = data.checkoutUrl;
       }
+      
       return data;
     } catch (error) {
       set({ 

@@ -33,7 +33,7 @@ export const purchaseService = {
 },
 
   createPurchase: async (sheetId) => {
-    const { data } = await api.post(API_ENDPOINTS.PURCHASES, { sheetId });
+    const { data } = await api.post(`/purchases/${sheetId}`);
     return data;
   },
 
@@ -51,7 +51,7 @@ export const purchaseService = {
       }
 
       const filename = createFilename(data.sheet?.title);
-      console.log('📥 Downloading as:', filename);
+      console.log(' Downloading as:', filename);
 
       //Fetch and download file
       const response = await fetch(data.downloadUrl);
