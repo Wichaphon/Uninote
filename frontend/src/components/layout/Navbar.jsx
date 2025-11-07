@@ -75,7 +75,7 @@ function Navbar() {
           <div className="flex items-center gap-6 flex-1 min-w-0">
             <button
               onClick={handleLogoClick}
-              className="flex items-center gap-2 text-2xl font-semibold text-indigo-600 hover:opacity-90 transition cursor-pointer flex-shrink-0 group"
+              className="flex items-center gap-2 text-2xl font-semibold text-indigo-600 hover:opacity-90 transition cursor-pointer shrink-0 group"
             >
               <img
                 src="/box-svgrepo-com.svg"
@@ -100,7 +100,7 @@ function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-[15px] mt-[1px]">
+            <div className="hidden md:flex items-center gap-2 text-[15px] mt-px">
               {!user || user.role === "USER" ? (
                 <button
                   onClick={() => navigate(user ? "/become-seller" : "/signup")}
