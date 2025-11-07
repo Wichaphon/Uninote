@@ -7,7 +7,7 @@ import { sellerService } from '../services/sellerService';
 import { formatPrice, formatDate } from '../lib/utils';
 import MySheetsList from '../components/seller/MySheetsList';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { motion } from 'framer-motion'; 
+import { motion } from 'framer-motion';
 import { 
   Cog6ToothIcon, 
   PlusIcon, 
@@ -33,6 +33,8 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { Listbox, Transition } from '@headlessui/react';
+import DeleteSheetModal from '../components/common/DeleteSheetModal';
+import { toast } from 'react-hot-toast';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -126,10 +128,11 @@ function SellerDashboard() {
   const { sales, fetchMySales } = usePurchaseStore();
 
   const [sellerProfile, setSellerProfile] = useState(null);
-  // ❌ ลบ showCreateForm
-  
   const [viewMode, setViewMode] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [sheetToDeleteId, setSheetToDeleteId] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'SELLER' || user?.role === 'ADMIN') {
@@ -148,13 +151,22 @@ function SellerDashboard() {
     }
   };
 
-  const handleDeleteSheet = async (sheetId) => {
-    if (!confirm('Are you sure you want to delete this sheet?')) return;
+  const handleDeleteSheet = (sheetId) => {
+    setSheetToDeleteId(sheetId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!sheetToDeleteId) return;
+    
     try {
-      await deleteSheet(sheetId);
-      // (ผมลบ alert ออกให้ครับ)
+      await deleteSheet(sheetToDeleteId);
+      toast.success('Sheet deleted successfully!');
     } catch (err) {
-      alert('Delete failed: ' + err.message);
+      toast.error('Delete failed: ' + err.message);
+    } finally {
+      setIsDeleteModalOpen(false);
+      setSheetToDeleteId(null);
     }
   };
   
@@ -557,6 +569,13 @@ function SellerDashboard() {
             </button>
           </div>
         )}
+
+        <DeleteSheetModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+        />
+        
       </div>
     </div>
   );

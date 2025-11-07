@@ -8,7 +8,6 @@ import {
   PencilSquareIcon, 
   TrashIcon,
   CheckBadgeIcon,
-  EyeSlashIcon,
   DocumentPlusIcon
 } from '@heroicons/react/24/outline';
 
@@ -22,14 +21,16 @@ function MySheetsList({ sheets, isLoading, onDelete }) {
       </div>
     );
   }
+  
+  const activeSheets = sheets.filter(sheet => sheet.isActive);
 
-  if (!sheets || sheets.length === 0) {
+  if (!activeSheets || activeSheets.length === 0) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      {sheets.map((sheet) => (
+      {activeSheets.map((sheet) => (
         <div 
           key={sheet.id} 
           className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow"
@@ -60,18 +61,10 @@ function MySheetsList({ sheets, isLoading, onDelete }) {
             <div className="text-left sm:text-right space-y-2 shrink-0 sm:ml-6">
               <p className="text-2xl font-bold text-indigo-600">{formatPrice(sheet.price)}</p>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                  sheet.isActive 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
               >
-                {sheet.isActive ? (
-                  <CheckBadgeIcon className="w-4 h-4" />
-                ) : (
-                  <EyeSlashIcon className="w-4 h-4" />
-                )}
-                {sheet.isActive ? 'Active' : 'Hidden'}
+                <CheckBadgeIcon className="w-4 h-4" />
+                Active
               </span>
             </div>
           </div>
