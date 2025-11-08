@@ -36,14 +36,17 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
   'http://localhost:5173',
+  'https://uninote-app.vercel.app',
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
+     
+      const isVercelApp = origin && origin.endsWith('.vercel.app');
 
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin) || isVercelApp) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
