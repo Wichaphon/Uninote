@@ -19,6 +19,12 @@ function HomePage() {
   const { sheets, isLoading, fetchSheets } = useSheetStore();
 
   useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      navigate('/admin');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
     fetchSheets({
       page: 1,
       limit: 4,
