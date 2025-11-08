@@ -50,7 +50,7 @@ function ExplorePage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/*Filters*/}
+        {/* Filters */}
         <SheetFilters
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -62,7 +62,7 @@ function ExplorePage() {
             <span className="font-medium">
               Showing {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} of <span className="text-indigo-600 font-bold">{pagination.total}</span> results
             </span>
-            {filters.search && (
+            {filters?.search && (
               <span className="ml-2 text-gray-600">
                 for "<strong className="text-gray-900">{filters.search}</strong>"
               </span>
@@ -70,7 +70,7 @@ function ExplorePage() {
           </div>
         )}
 
-        {/*Sheet List*/}
+        {/* Sheet List */}
         <SheetList sheets={sheets} isLoading={isLoading} error={error} />
 
         {/*Pagination*/}
